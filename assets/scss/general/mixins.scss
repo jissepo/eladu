@@ -1,0 +1,65 @@
+@mixin styled-checkbox {
+  input[type="checkbox"] {
+    position: absolute;
+    left: 0;
+    top: 0;
+    min-width: 1em;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    opacity: 0;
+    margin: 0;
+    padding: 0;
+    cursor: pointer;
+    display: block;
+
+    & ~ label {
+      position: initial;
+      display: inline-block;
+      font-weight: 400;
+      margin: 0;
+      min-width: calc(1em + 2px);
+      white-space: break-spaces;
+      line-height: 1;
+      color: $dark-gray;
+
+      &::before,
+      &::after {
+        content: "";
+        width: 1.2rem;
+        height: 1.2rem;
+        display: block;
+        box-sizing: border-box;
+        border-radius: 0;
+        border: 1px solid transparent;
+        z-index: 0;
+        position: absolute;
+        left: 0;
+        top: 0;
+        background-color: transparent;
+      }
+
+      &::before {
+        border-color: $main;
+        border-radius: 20%;
+      }
+    }
+
+    &:checked {
+      & ~ label {
+        &::after {
+          background-color: $accent !important;
+          transform: scale(0.6);
+        }
+      }
+    }
+
+    &:focus {
+      & ~ label {
+        &::before {
+          outline: 1px auto $dark-gray;
+        }
+      }
+    }
+  }
+}

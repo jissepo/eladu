@@ -1,0 +1,20 @@
+@import "../../../node_modules/vue-select/src/scss/vue-select.scss";
+.v-select {
+  height: 100%;
+  .vs__dropdown-toggle,
+  .vs__selected,
+  .vs__search {
+    height: 100%;
+  }
+  .vs__selected,
+  .vs__search {
+    margin-top: 0;
+  }
+  .vs__dropdown-toggle {
+    padding: 0;
+    border-radius: $button-border-radius;
+  }
+  .vs__clear{
+    background: none!important;
+  }
+}

@@ -1,0 +1,25 @@
+header {
+  h2 {
+    font-weight: 600;
+  	font-size: 1em;
+    margin: 2.5rem 0 1rem;
+  }
+}
+
+p {
+  margin: 0;
+}
+
+ul, ol {
+  margin: 0;
+  color: $dark-gray;
+  list-style-type: none;
+}
+
+* {
+  font-family: 'Montserrat';
+}
+
+.error, .error p {
+  color: red !important;
+}

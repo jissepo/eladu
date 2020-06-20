@@ -1,0 +1,29 @@
+@import "./general/variables.scss";
+@import "./general/mixins.scss";
+
+#vue--checkout {
+  max-width: 800px;
+  margin: 0 auto;
+  padding-bottom: 5rem;
+  * {
+    box-sizing: border-box;
+  }
+  a {
+    &:focus {
+      outline: $dark-gray auto 1px;
+    }
+  }
+  section {
+    padding-top: 30px;
+  }
+
+  // @import './general/reset.scss';
+  @import "./general/typography.scss";
+  @import "./general/inputs.scss";
+  @import "./components/loader.scss";
+  @import "./components/box.scss";
+  @import "./components/checkout.scss";
+  @import "./components/extras.scss";
+  @import "./components/confirmation.scss";
+  @import "./components/vue-select.scss";
+}

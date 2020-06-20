@@ -1,0 +1,20 @@
+.extras {
+  &__container {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: auto;
+    align-items: start;
+    @media screen and (max-width: 600px) {
+      grid-template-columns: 1fr;
+    }
+  }
+  &__field {
+    display: block;
+    position: relative;
+    white-space: nowrap;
+    line-height: 1;
+    margin-bottom: 1rem;
+
+    @include styled-checkbox;
+  }
+}

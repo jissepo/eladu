@@ -1,0 +1,60 @@
+.confirmation {
+  &__grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto;
+    gap: 0.5rem;
+
+    @media screen and (max-width: 600px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__extras {
+    &--list {
+      list-style: "- ";
+
+      li {
+        margin-left: 0.5rem;
+
+        @media screen and (max-width: 600px) {
+          margin-left: 0;
+        }
+      }
+    }
+  }
+
+  &__row {
+    width: 100%;
+    margin-top: 1rem;
+  }
+
+  &__checkbox {
+    display: block;
+    position: relative;
+    white-space: nowrap;
+    line-height: 1;
+    @include styled-checkbox;
+  }
+  &__errors {
+    margin: 2rem 0;
+  }
+
+  .makecommerce_country_picker_label {
+    background-position: center;
+    margin-right: 2.3rem;
+    border: 1px solid $dark-gray;
+
+    &.selected {
+      border: 2px solid green;
+    }
+    &::before {
+      display: none;
+    }
+  }
+  .makecommerce-banklink-picker {
+    img {
+      margin-bottom: 0 !important;
+    }
+  }
+}

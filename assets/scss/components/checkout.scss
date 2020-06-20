@@ -1,0 +1,102 @@
+.checkout {
+  &__container {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+
+    @media screen and (max-width: 600px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__header {
+    padding: 1rem 0;
+    display: flex;
+    justify-content: center;
+
+    &--button {
+      // background-color: $main;
+      color: $white;
+      padding: 0.4rem 0.8rem;
+      font-size: 0.8em;
+      font-weight: 500;
+      background: #1a3c4c;
+      $border-radius: 1rem;
+      text-transform: uppercase;
+
+      &.private {
+        border-top-left-radius: $border-radius;
+        border-bottom-left-radius: $border-radius;
+      }
+      &.commercial {
+        border-top-right-radius: $border-radius;
+        border-bottom-right-radius: $border-radius;
+      }
+
+      &.active {
+        color: $white;
+        background: $main !important;
+        border: 2px solid $main;
+        border-radius: $border-radius;
+        z-index: 1;
+      }
+
+      &:not(.active) {
+        $offset-padding: 2rem;
+
+        &.private {
+          padding-right: $offset-padding;
+          margin-right: $offset-padding * -0.5;
+        }
+        &.commercial {
+          padding-left: $offset-padding;
+          margin-left: $offset-padding * -0.5;
+        }
+      }
+    }
+  }
+
+  &__phone {
+    display: flex;
+    flex-wrap: wrap;
+    &--input {
+      display: flex;
+      width: 50%;
+
+      @media screen and (max-width: 600px) {
+        width: 100%;
+        flex-direction: column;
+        margin-bottom: 1rem;
+      }
+
+      @media screen and (min-width: 601px) {
+        &:first-child {
+          padding-right: 0.5rem;
+        }
+        &:nth-child(2) {
+          padding-left: 0.5rem;
+        }
+      }
+
+      input {
+        border-top-right-radius: inherit;
+        border-bottom-right-radius: inherit;
+      }
+      button {
+        border-top-left-radius: inherit;
+        border-bottom-left-radius: inherit;
+      }
+
+      input,
+      button {
+        height: 35px;
+      }
+    }
+  }
+}

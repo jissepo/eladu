@@ -1,0 +1,91 @@
+.box__container {
+  box-shadow: 0px 0px 5px 1px #00000045;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap; }
+
+.box__location-container, .box__other-container {
+  width: 50%; }
+
+.box__location-container {
+  padding-right: 1rem; }
+
+.box__location-single {
+  position: relative;
+  display: inline-block;
+  white-space: nowrap;
+  line-height: 1;
+  width: 100%;
+  padding: 0.5rem 0; }
+  .box__location-single input[type="radio"] {
+    position: absolute;
+    left: 0;
+    top: 0;
+    min-width: 1em;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    opacity: 0;
+    margin: 0;
+    padding: 0;
+    cursor: pointer; }
+    .box__location-single input[type="radio"]:checked ~ .visible {
+      background-color: #88888882;
+      border-radius: 4px;
+      box-shadow: 0 0 2px 0 #00000069;
+      color: #fff;
+      padding: 0.5rem 0.3rem; }
+
+.box__date-container, .box__type-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap; }
+
+.box__type-single {
+  position: relative;
+  display: inline-block;
+  white-space: nowrap;
+  line-height: 1;
+  width: 100%;
+  padding: 0.5rem 0; }
+  .box__type-single input[type="radio"] {
+    position: absolute;
+    left: 0;
+    top: 0;
+    min-width: 1em;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    opacity: 0;
+    margin: 0;
+    padding: 0;
+    cursor: pointer; }
+    .box__type-single input[type="radio"] ~ .visible label {
+      position: initial;
+      display: inline-block;
+      font-weight: 400;
+      margin: 0;
+      text-indent: 1.5em;
+      min-width: calc(1em + 2px); }
+      .box__type-single input[type="radio"] ~ .visible label::before, .box__type-single input[type="radio"] ~ .visible label::after {
+        content: "";
+        width: calc(1em + 2px);
+        height: calc(1em + 2px);
+        display: block;
+        box-sizing: border-box;
+        border-radius: 0;
+        border: 1px solid transparent;
+        z-index: 0;
+        position: absolute;
+        left: 0;
+        top: 0.5rem;
+        background-color: transparent; }
+      .box__type-single input[type="radio"] ~ .visible label::before {
+        border-color: #bdc3c7;
+        border-radius: 20%; }
+    .box__type-single input[type="radio"]:checked ~ .visible label::after {
+      background-color: #bdc3c7 !important;
+      transform: scale(0.6); }
