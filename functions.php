@@ -93,7 +93,7 @@ class ThemeSetup
     private function add_reservations_table()
     {
         $saved_version = (int) get_site_option('jj_reservations_table_version');
-        $currentVersion = 4;
+        $currentVersion = 5;
 
         global $wpdb;
         $wpdb->box_reservations = "{$wpdb->prefix}box_reservations";
@@ -103,7 +103,7 @@ class ThemeSetup
 
             $charset_collate = $wpdb->get_charset_collate();
 
-            $sql = "CREATE TABLE `{$wpdb->prefix}box_reservations` (
+            $sql = "CREATE TABLE `{$wpdb->box_reservations}` (
             id MEDIUMINT NOT NULL AUTO_INCREMENT,
             product_id SMALLINT NOT NULL,
             status SMALLINT UNSIGNED NOT NULL DEFAULT 1 ,
@@ -194,8 +194,8 @@ class ThemeSetup
     public static function get_datepicker_locale()
     {
         return [
-            'night' => __('Öö', THEME_TEXT_DOMAIN),
-            'nights' => __('Ööd', THEME_TEXT_DOMAIN),
+            'night' => __('päev', THEME_TEXT_DOMAIN),
+            'nights' => __('päeva', THEME_TEXT_DOMAIN),
             'day-names' => [
                 __('Esmap', THEME_TEXT_DOMAIN),
                 __('Teisip', THEME_TEXT_DOMAIN),
@@ -309,6 +309,7 @@ class ThemeSetup
                     'id' => $product->get_id(),
                     'price_html'  => $product->get_price_html(),
                     'price'  => $product->get_price(),
+                    'tippy'  => get_field('tippy', $product->get_id()),
                 ];
             }
 
@@ -344,14 +345,15 @@ class ThemeSetup
 
         ]);
 
-        \usort($products->posts, function ($a, $b) {
-            $a = \str_replace("Boks ", "", $a->post_title);
-            $b = \str_replace("Boks ", "", $b->post_title);
-            if ($a == $b) {
-                return 0;
-            }
-            return ($a < $b) ? -1 : 1;
-        });
+        // \usort($products->posts, function ($a, $b) {
+        //     $a = \str_replace("Boks ", "", $a->post_title);
+        //     $b = \str_replace("Boks ", "", $b->post_title);
+        //     if ($a == $b) {
+        //         return 0;
+        //     }
+        //     return ($a < $b) ? -1 : 1;
+        // });
+
         if (count($products->posts)) {
             foreach ($products->posts as $key => $post) {
 
@@ -372,28 +374,48 @@ class ThemeSetup
 
                 if (empty($res)) {
                     $can_book_box = true;
-                } else {
-                    $last_booking = $res[0];
-                    $last_booking_check_in_datetime = new \DateTime($last_booking->check_in_date);
-                    $last_booking_check_out_datetime = new \DateTime($last_booking->check_out_date);
-
-                    if ($last_booking_check_in_datetime !== $last_booking_check_out_datetime && $last_booking_check_out_datetime < $check_in_datetime) {
-                        $can_book_box = true;
-                    }
                 }
+                //  else {
+                //     $last_booking = $res[0];
+                //     $last_booking_check_in_datetime = new \DateTime($last_booking->check_in_date);
+                //     $last_booking_check_out_datetime = new \DateTime($last_booking->check_out_date);
+
+                //     if ($last_booking_check_in_datetime !== $last_booking_check_out_datetime && $last_booking_check_out_datetime < $check_in_datetime) {
+                //         $can_book_box = true;
+                //     }
+                // }
 
 
-                if ($can_book_box) {
-                    $returnValue[] = [
-                        'value' => $product->get_id(),
-                        'name' => $product->get_name(),
-                        'name_price' => $product->get_name() . ' ( $' . \number_format($product->get_price(), wc_get_price_decimals(), wc_get_price_decimal_separator(), wc_get_price_thousand_separator()) . ' )',
-                        'price_html' => $product->get_price_html(),
-                        'price'  => $product->get_price(),
-                    ];
-                }
+                $returnValue[] = [
+                    'can_book' => $can_book_box,
+                    'box_number' => \str_replace("Boks ", "", $product->get_name()),
+                    'value' => $product->get_id(),
+                    'name' => $product->get_name(),
+                    'name_price' => $product->get_name() . ' ( $' . \number_format($product->get_price(), wc_get_price_decimals(), wc_get_price_decimal_separator(), wc_get_price_thousand_separator()) . ' )',
+                    'price_html' => $product->get_price_html(),
+                    'price'  => $product->get_price(),
+                ];
+
+                // Old style
+                // if ($can_book_box) {
+                //     $returnValue[] = [
+                //         'value' => $product->get_id(),
+                //         'name' => $product->get_name(),
+                //         'name_price' => $product->get_name() . ' ( $' . \number_format($product->get_price(), wc_get_price_decimals(), wc_get_price_decimal_separator(), wc_get_price_thousand_separator()) . ' )',
+                //         'price_html' => $product->get_price_html(),
+                //         'price'  => $product->get_price(),
+                //     ];
+                // }
             }
-
+            array_multisort(
+                array_column($returnValue, 'can_book'),
+                SORT_DESC,
+                SORT_NUMERIC,
+                array_column($returnValue, 'box_number'),
+                SORT_ASC,
+                SORT_NUMERIC,
+                $returnValue
+            );
             \wp_send_json_success($returnValue);
         } else {
             \wp_send_json_error(__('Saadaolevaid bokse ei leitud', THEME_TEXT_DOMAIN));
@@ -414,7 +436,7 @@ class ThemeSetup
         if ($mobile && \strpos($mobile, '+372') !== false && trim(\substr($mobile, 3)) !== "") {
             $recipients = [$mobile];
             $url = "https://gatewayapi.com/rest/mtsms";
-            $verfication_code = \substr(bin2hex(openssl_random_pseudo_bytes(16)), 0, 8);
+            // $verfication_code = \substr(bin2hex(openssl_random_pseudo_bytes(16)), 0, 8);
             $verfication_code = \rand(10000000, 99999999);
             $api_token = "sC97khRmTVucZ33s5dDbc1mfYtuT-569tIYxNJxeHrH5_lz4H0yRppASO4r6gah-";
             $json = [
@@ -426,15 +448,16 @@ class ThemeSetup
                 $json['recipients'][] = ['msisdn' => $msisdn];
             }
             \update_option($mobile, $verfication_code, false);
-            // $ch = curl_init();
-            // curl_setopt($ch, CURLOPT_URL, $url);
-            // curl_setopt($ch, CURLOPT_HTTPHEADER, array("Content-Type: application/json"));
-            // curl_setopt($ch, CURLOPT_USERPWD, $api_token . ":");
-            // curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($json));
-            // curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, array("Content-Type: application/json"));
+            curl_setopt($ch, CURLOPT_USERPWD, $api_token . ":");
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($json));
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             // $result = curl_exec($ch);
-            // curl_close($ch);
-            wp_send_json_success($verfication_code);
+            curl_close($ch);
+            // wp_send_json_success();
+            wp_send_json_success($verfication_code); // For automatic filling when testing
         }
         wp_send_json_error(__('Telefoni nr-ga oli probleeme. Kontrolliga palun üle, et on olemas eesliide +372.', THEME_TEXT_DOMAIN));
     }
@@ -504,7 +527,7 @@ class ThemeSetup
         if (isset($values['check_in_date'])) {
             wc_add_order_item_meta($item_id, 'Alguskuupäev', $values['check_in_date']);
         }
-        if (isset($values['check_out_date'])) {
+        if (isset($values['check_in_date'], $values['check_out_date']) && $values['check_in_date'] == $values['check_out_date']) {
             wc_add_order_item_meta($item_id, 'Lõppkuupäev', $values['check_out_date']);
         }
     }
@@ -579,7 +602,7 @@ abstract class Meta_box
         global $wpdb;
         $rows = $wpdb->get_results(
             $wpdb->prepare(
-                "SELECT * FROM {$wpdb->box_reservations} WHERE product_id=%s AND `status`=1 AND check_out_date>NOW()",
+                "SELECT * FROM {$wpdb->box_reservations} WHERE product_id=%s AND `status`=1 AND (check_out_date>NOW() OR check_out_date IS NULL)",
                 $post->ID
             )
         );
@@ -608,6 +631,7 @@ abstract class Meta_box
                 computed: {
                     attributes() {
                         let reservations = JSON.parse('<?= \json_encode($rows); ?>');
+                        console.log(reservations);
                         if (reservations.length) {
 
                             const themes = ['blue', 'red', 'purple', 'green', 'yellow'];
@@ -615,11 +639,11 @@ abstract class Meta_box
                             return reservations.map((reservation, index) => {
                                 iterator = iterator > themes.length ? 0 : iterator
                                 return {
-                                    key: 'reserved_'+reservation.order_id,
+                                    key: 'reserved_' + reservation.order_id,
                                     highlight: themes[iterator++],
                                     dates: [{
                                         start: new Date(reservation.check_in_date),
-                                        end: new Date(reservation.check_out_date)
+                                        end: reservation.check_out_date === null ? null : new Date(reservation.check_out_date)
                                     }]
                                 }
                             });

@@ -1,13 +1,13 @@
 .extras {
-  &__container {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    grid-template-rows: auto;
-    align-items: start;
-    @media screen and (max-width: 600px) {
-      grid-template-columns: 1fr;
-    }
-  }
+  // &__container {
+  //   display: grid;
+  //   grid-template-columns: 1fr;
+  //   grid-template-rows: auto;
+  //   align-items: start;
+  //   @media screen and (max-width: 600px) {
+  //     grid-template-columns: 1fr;
+  //   }
+  // }
   &__field {
     display: block;
     position: relative;
@@ -16,5 +16,14 @@
     margin-bottom: 1rem;
 
     @include styled-checkbox;
+
+    button {
+      position: absolute;
+      height: 2rem;
+      width: 2rem;
+      padding: 0;
+      right: 0;
+      z-index: 2;
+    }
   }
 }

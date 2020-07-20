@@ -1,6 +1,6 @@
 <section id="vue--checkout">
 	<div class="loader-container" v-view="loaderScrollHandler" v-bind:class="{ active: loader.isLoading }">
-		<div class="lds-dual-ring"  v-bind:style="{ position: loader.styles.position, top: loader.styles.top, bottom: loader.styles.bottom }"></div>
+		<div class="lds-dual-ring" v-bind:style="{ position: loader.styles.position, top: loader.styles.top, bottom: loader.styles.bottom }"></div>
 	</div>
 	<form action="<?php echo admin_url('admin-post.php') ?>" method="post" v-on:submit.prevent="submitPurchase">
 		<section class="box">
@@ -12,7 +12,7 @@
 					<v-select placeholder="<?php _e('Lao asukoht', THEME_TEXT_DOMAIN); ?>" v-model="checkout.location" :options="location.locations"></v-select>
 				</div>
 				<div class="box__date">
-					<v-date-picker :start-date="new Date()" :hovering-tooltip="true" :i18n="datepicker.locale" v-on:check-in-changed="updateCheckInDate($event)" v-on:check-out-changed="datepicker.checkOut = $event" format="DD/MM/YYYY" :min-nights="datepicker.minNights" :first-day-of-week="1" :single-day-selection="datepicker.isInfinite" />
+					<v-date-picker :start-date="new Date()" :end-date="datepickerEndDate" :enable-checkout="true" :hovering-tooltip="true" :i18n="datepicker.locale" v-on:check-in-changed="updateCheckInDate($event)" v-on:check-out-changed="datepicker.checkOut = $event" format="DD/MM/YYYY" :min-nights="datepicker.minNights" :first-day-of-week="1" :single-day-selection="datepicker.isInfinite" />
 					<p class="" v-if="errorMessage">{{ errorMessage }}</p>
 				</div>
 				<div class="box__map">
@@ -25,6 +25,10 @@
 
 				<div class="box__type">
 					<div class="box__type--single">
+						<p><?=__('Bokse on võimalik ette broneerida kuni 14 päeva.', THEME_TEXT_DOMAIN);?></p><br>
+						<p><?=__('Boksi broneeringu minimaalne kestvus on 31 päeva.', THEME_TEXT_DOMAIN);?></p><br>
+					</div>
+					<div class="box__type--single">
 						<input type="checkbox" name="box__type" v-on:change="changeDatePickerMode($event)" />
 						<label for="box__type"><?php _e('Tähtajatu', THEME_TEXT_DOMAIN); ?></label>
 					</div>
@@ -32,11 +36,16 @@
 
 				<div class="box__selected" v-if="location.boxes.length">
 					<p>
-						<?php _e('Saadaolevaid ladusid', THEME_TEXT_DOMAIN); ?>: <strong>{{location.boxes.length}}</strong>
+						<?php _e('Saadaolevaid ladusid', THEME_TEXT_DOMAIN); ?>: <strong>{{location.boxes.filter(b=>b.can_book).length}}</strong>
 					</p>
-					<v-select placeholder="<?php _e('Vali ladu', THEME_TEXT_DOMAIN); ?>" v-model="checkout.box" :options="location.boxes" label="name_price">
-						<template v-slot:option="option">
-							{{ option.name }} ( <span v-html="option.price_html"></span> )
+					<v-select placeholder="<?php _e('Vali ladu', THEME_TEXT_DOMAIN); ?>" v-model="checkout.box" :options="location.boxes" label="name_price" :selectable="option => option.can_book">
+						<template v-slot:option="option"  >
+							<div v-if="option.can_book">
+								{{ option.name }} ( <span v-html="option.price_html"></span> )
+							</div>
+							<div class="striketrough" v-if="!option.can_book">
+								{{ option.name }} ( <span v-html="option.price_html"></span> ) <?php _e('Broneeritud', THEME_TEXT_DOMAIN);?>
+							</div>
 						</template>
 					</v-select>
 				</div>
@@ -47,7 +56,7 @@
 				</div>
 			</div>
 		</section>
-		<section class="checkout" v-if="true || checkout.box">
+		<section class="checkout" v-if="checkout.box">
 			<header class="checkout__title">
 				<h2><?php _e('Sisesta kontaktandmed', THEME_TEXT_DOMAIN); ?></h2>
 			</header>
@@ -132,7 +141,7 @@
 
 			</div>
 		</section>
-		<section class="extras" v-if="true || checkout.box && checkout.mobilevalidated">
+		<section class="extras" v-if="true || checkout.box && mobile.validated">
 			<header class="extras__title">
 				<h2><?php _e('Vali lisateenused', THEME_TEXT_DOMAIN); ?></h2>
 			</header>
@@ -140,13 +149,14 @@
 				<div class="extras__field" v-for="extra in extras.available" v-if="true || checkout.location && checkout.location.label">
 					<input type="checkbox" :name="'extra['+extra.id+']'" v-on:change="changeSelectedExtra($event, extra)" />
 					<label :for="'extra['+extra.id+']'">{{extra.label}} (&nbsp;<span :inner-html.prop="extra.price_html"></span>&nbsp;)</label>
+					<button v-if="extra.tippy" type="button" :content="extra.tippy" v-tippy="{ theme: 'light-border', placement : 'left',  arrow: true }">?</button>
 				</div>
 				<div class="extras__field" v-if="!checkout.box">
 					<p><?php _e('Esmalt vali ladu', THEME_TEXT_DOMAIN); ?></p>
 				</div>
 			</div>
 		</section>
-		<section class="confirmation" v-if="true || checkout.box && checkout.mobilevalidated">
+		<section class="confirmation" v-if="checkout.box && mobile.validated">
 			<header class="confirmation__title">
 				<h2><?php _e('Tellimuse kinnitus', THEME_TEXT_DOMAIN); ?></h2>
 			</header>
@@ -175,12 +185,12 @@
 				<div class="confirmation__checkbox">
 					<input type="checkbox" name="checkout[privacy]" v-model="checkout.privacyPolicy" />
 					<label><?php
-							echo sprintf(
-								__('Nõustun %s ja %s.', THEME_TEXT_DOMAIN),
-								'<a href="' . get_privacy_policy_url() . '">' . __('kasutajatingimuste', THEME_TEXT_DOMAIN) . '</a>',
-								'<a href="' . get_privacy_policy_url() . '">' . __('privaatsuspoliitikaga', THEME_TEXT_DOMAIN) . '</a>'
-							);
-							?>
+									echo sprintf(
+										__('Nõustun %s ja %s.', THEME_TEXT_DOMAIN),
+										'<a href="' . get_privacy_policy_url() . '">' . __('kasutajatingimuste', THEME_TEXT_DOMAIN) . '</a>',
+										'<a href="' . get_privacy_policy_url() . '">' . __('privaatsuspoliitikaga', THEME_TEXT_DOMAIN) . '</a>'
+									);
+									?>
 					</label>
 				</div>
 			</div>

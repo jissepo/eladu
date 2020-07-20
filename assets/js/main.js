@@ -7,10 +7,13 @@ import HotelDatePicker from "vue-hotel-datepicker";
 import moment from "moment";
 import checkView from "vue-check-view";
 import Qs from "qs";
+import VueTippy, { TippyComponent } from "vue-tippy";
 
+Vue.use(VueTippy);
 Vue.use(checkView);
 Vue.use(VueAxios, axios);
 
+Vue.component("tippy", TippyComponent);
 Vue.component("v-select", vSelect);
 Vue.component("v-date-picker", HotelDatePicker);
 
@@ -52,7 +55,7 @@ new Vue({
     datepicker: {
       locale: php_object.translations.datepicker,
       isInfinite: false,
-      minNights: 30,
+      minNights: 31,
       checkIn: null,
       checkOut: null,
     },
@@ -70,19 +73,19 @@ new Vue({
       box: null,
       privacyPolicy: false,
       fields: {
-        mobile: "+3725157111", //null,
-        firstName: "Joosep", //null,
-        lastName: "test", //null,
-        identifierCode: 39504100824, //null,
-        representativeFirstName: "JoosepRepresent", //null,,
-        representativeLastName: "testRepresent", //null,,
-        companyName: "testCompany", //null,
-        registryCode: "yeetskeet", //null,
-        email: "joosep.joeleht@gmail.com", //null,
-        address: "Pronksi 6", //null,
-        postcode: 123465, //null,
-        jurisdiction: "Tallinn", //null,
-        country: "EE", //null,
+        mobile: null,
+        firstName: null,
+        lastName: null,
+        identifierCode: null,
+        representativeFirstName: null,
+        representativeLastName: null,
+        companyName: null,
+        registryCode: null,
+        email: null,
+        address: null,
+        postcode: null,
+        jurisdiction: null,
+        country: null,
       },
     },
   },
@@ -182,6 +185,12 @@ new Vue({
       }
 
       return errors;
+    },
+    datepickerEndDate() {
+      if (this.datepicker.checkIn) {
+        return new Date(8640000000000000);
+      }
+      return new Date(Date.now() + 12096e5);
     },
   },
   watch: {
@@ -423,10 +432,10 @@ new Vue({
           },
         })
         .then(function (response) {
-          console.log(response);
-
           if (response.data.success) {
-            self.mobile.code = response.data.data;
+            if (response.data.data) {
+              self.mobile.code = response.data.data;
+            }
           } else {
             self.mobile.validated = false;
             self.mobile.error = response.data.data;
@@ -450,8 +459,6 @@ new Vue({
           },
         })
         .then(function (response) {
-          console.log(response);
-
           if (response.data.success) {
             self.mobile.validated = true;
           } else {
@@ -501,13 +508,10 @@ new Vue({
         data.billing_first_name = this.checkout.fields.representativeFirstName;
         data.billing_last_name = this.checkout.fields.representativeLastName;
       }
-      console.log(data);
 
       this.axios
         .post(`${php_object.ajax_url}?action=jj_checkout`, Qs.stringify(data))
         .then(function (response) {
-          console.log(response);
-
           if (response.data.result === "success") {
             window.location = response.data.redirect;
           } else {
@@ -538,7 +542,6 @@ new Vue({
           })
           .then(function (response) {
             if (response.data.success) {
-              console.log(response.data);
               self.location.boxes = response.data.data;
             }
 

@@ -1,3 +1,4 @@
+@import url(../../node_modules/tippy.js/themes/light-border.css);
 #vue--checkout {
   max-width: 800px;
   margin: 0 auto;
@@ -267,6 +268,11 @@
       #vue--checkout .box__map--popup-iframe iframe {
         height: 100%;
         width: 100%; }
+  #vue--checkout .box .striketrough,
+  #vue--checkout .box .striketrough span {
+    pointer-events: none;
+    color: #ddd;
+    text-decoration: line-through; }
   #vue--checkout .checkout__container {
     display: flex;
     flex-direction: column; }
@@ -332,14 +338,6 @@
       #vue--checkout .checkout__phone--input input,
       #vue--checkout .checkout__phone--input button {
         height: 35px; }
-  #vue--checkout .extras__container {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    grid-template-rows: auto;
-    align-items: start; }
-    @media screen and (max-width: 600px) {
-      #vue--checkout .extras__container {
-        grid-template-columns: 1fr; } }
   #vue--checkout .extras__field {
     display: block;
     position: relative;
@@ -389,6 +387,13 @@
         transform: scale(0.6); }
       #vue--checkout .extras__field input[type="checkbox"]:focus ~ label::before {
         outline: 1px auto #1a3c4c; }
+    #vue--checkout .extras__field button {
+      position: absolute;
+      height: 2rem;
+      width: 2rem;
+      padding: 0;
+      right: 0;
+      z-index: 2; }
   #vue--checkout .confirmation__grid {
     display: grid;
     grid-template-columns: 1fr 1fr;

@@ -146,4 +146,11 @@
       }
     }
   }
+
+  .striketrough,
+  .striketrough span {
+    pointer-events: none;
+    color: #ddd;
+    text-decoration: line-through;
+  }
 }
