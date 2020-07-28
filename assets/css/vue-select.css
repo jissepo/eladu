@@ -288,14 +288,3 @@
 /* Loading Spinner States */
 .vs--loading .vs__spinner {
   opacity: 1; }
-
-.v-select {
-  width: 100%; }
-
-.vs--searchable .vs__dropdown-toggle,
-.vs--searchable .vs__selected {
-  height: 100%; }
-
-.vs--searchable .vs__selected,
-.vs--searchable .vs__search {
-  margin-top: 0; }

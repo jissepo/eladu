@@ -4,14 +4,18 @@ import axios from "axios";
 import VueAxios from "vue-axios";
 import vSelect from "vue-select";
 import HotelDatePicker from "vue-hotel-datepicker";
-import moment from "moment";
 import checkView from "vue-check-view";
-import Qs from "qs";
 import VueTippy, { TippyComponent } from "vue-tippy";
+import Sticky from "vue-sticky-directive";
+
+import moment from "moment";
+import Qs from "qs";
+import * as EmailValidator from "email-validator";
 
 Vue.use(VueTippy);
 Vue.use(checkView);
 Vue.use(VueAxios, axios);
+Vue.use(Sticky);
 
 Vue.component("tippy", TippyComponent);
 Vue.component("v-select", vSelect);
@@ -33,6 +37,7 @@ Vue.filter("formatSum", function (value) {
 new Vue({
   el: "#vue--checkout",
   data: {
+    canShowContact: false,
     loader: {
       isLoading: true,
       isFixedTop: false,
@@ -73,7 +78,7 @@ new Vue({
       box: null,
       privacyPolicy: false,
       fields: {
-        mobile: null,
+        mobile: "+372",
         firstName: null,
         lastName: null,
         identifierCode: null,
@@ -174,6 +179,9 @@ new Vue({
       if (!this.checkout.fields.email) {
         errors.push("E-mail peab olema sisestatud.");
       }
+      if (!EmailValidator.validate(this.checkout.fields.email.trim())) {
+        errors.push("Palun kontrollige üle e-mail.");
+      }
       if (!this.checkout.fields.address) {
         errors.push("Aadress peab olema sisestatud.");
       }
@@ -192,6 +200,19 @@ new Vue({
       }
       return new Date(Date.now() + 12096e5);
     },
+    boxExtras() {
+      if (this.checkout.box === null) {
+        return [];
+      }
+      const self = this;
+
+      return this.extras.available.filter(
+        (extra) =>
+          extra.connected_products.findIndex(
+            (extra_box) => parseInt(extra_box) === self.checkout.box.value
+          ) !== -1
+      );
+    },
   },
   watch: {
     "checkout.location": function (newVal, oldVal) {
@@ -203,30 +224,13 @@ new Vue({
     "datepicker.checkOut": function (newVal, oldVal) {
       this.updateAvailableBoxes();
     },
-    "checkout.box": async function (newVal, oldVal) {
-      const self = this;
-      if (this.checkout.box === null) {
-        this.extras.available = [];
-        this.extras.selected = [];
-        return;
+    "checkout.box": function (newVal, oldVal) {
+      if (!this.canShowContact) {
+        this.canShowContact = true;
       }
-      self.loader.isLoading = true;
-      await this.axios
-        .get(`${php_object.ajax_url}?action=get_available_extras`, {
-          params: {
-            selectedBoXId: this.checkout.box.id,
-          },
-        })
-        .then(function (response) {
-          if (response.data.success) {
-            self.extras.available = response.data.data;
-          }
-          self.loader.isLoading = false;
-        })
-        .catch(function (error) {
-          console.log(error);
-          self.loader.isLoading = false;
-        });
+      if (this.checkout.box === null) {
+        this.extras.selected = [];
+      }
     },
     "mobile.validated": function (newVal, oldVal) {
       const self = this;
@@ -366,7 +370,7 @@ new Vue({
         });
     },
   },
-  beforeMount: async function () {
+  created: async function () {
     const self = this;
     this.axios
       .get(`${php_object.ajax_url}?action=get_storage_locations`)
@@ -380,6 +384,23 @@ new Vue({
         console.log(error);
         self.loader.isLoading = false;
       });
+  },
+  mounted: function () {
+    const self = this;
+    this.$nextTick(function () {
+      this.axios
+        .get(`${php_object.ajax_url}?action=get_available_extras`)
+        .then(function (response) {
+          if (response.data.success) {
+            self.extras.available = response.data.data;
+          } else {
+            console.log(response.data);
+          }
+        })
+        .catch(function (error) {
+          console.log(error);
+        });
+    });
   },
   methods: {
     loaderScrollHandler: function (event) {
@@ -403,6 +424,7 @@ new Vue({
 
       if (this.datepicker.isInfinite) {
         this.datepicker.minNights = 999;
+        this.datepicker.checkOut = null;
       } else {
         this.datepicker.minNights = 31;
       }
@@ -526,11 +548,7 @@ new Vue({
     },
     updateAvailableBoxes() {
       const self = this;
-      if (
-        this.datepicker.checkOut &&
-        this.datepicker.checkIn &&
-        this.checkout.location
-      ) {
+      if (this.datepicker.checkIn && this.checkout.location) {
         self.loader.isLoading = true;
         this.axios
           .get(`${php_object.ajax_url}?action=get_available_boxes`, {

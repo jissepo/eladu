@@ -6,12 +6,13 @@
   "scripts": {
     "start": "node-sass --watch ./assets/scss/main.scss -o ./assets/css",
     "webpack": "webpack --watch --config webpack.config.js ",
-    "webpack:production": "webpack --config webpack.config.js"
+    "webpack:production": "webpack --config webpack.production.config.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "axios": "^0.19.2",
+    "email-validator": "^2.0.4",
     "moment": "^2.27.0",
     "node-sass": "^4.13.1",
     "qs": "^6.9.4",
@@ -23,6 +24,8 @@
     "vue-in-viewport-directive": "^2.0.0",
     "vue-loading-spinner": "^1.0.11",
     "vue-select": "^3.10.3",
+    "vue-sticky-directive": "0.0.10",
+    "vue-sticky-js": "0.0.4",
     "vue-tippy": "^4.5.1"
   },
   "devDependencies": {

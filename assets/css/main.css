@@ -3,6 +3,9 @@
   max-width: 800px;
   margin: 0 auto;
   padding-bottom: 5rem;
+  display: grid;
+  grid-template-columns: 10fr 100px;
+  gap: 1rem;
   /* KeyFrames */
   /* Dropdown Default Transition */
   /** Component States */
@@ -99,6 +102,8 @@
       color: #fff !important; }
       #vue--checkout .green-button.sc_button_hover_slide_left[disabled] {
         background: #dadada !important; }
+  #vue--checkout .container__right {
+    margin-top: calc(1.5rem + 30px); }
   #vue--checkout .loader-container {
     position: absolute;
     top: 0;
@@ -324,11 +329,6 @@
           width: 100%;
           flex-direction: column;
           margin-bottom: 1rem; } }
-      @media screen and (min-width: 601px) {
-        #vue--checkout .checkout__phone--input:first-child {
-          padding-right: 0.5rem; }
-        #vue--checkout .checkout__phone--input:nth-child(2) {
-          padding-left: 0.5rem; } }
       #vue--checkout .checkout__phone--input input {
         border-top-right-radius: inherit;
         border-bottom-right-radius: inherit; }

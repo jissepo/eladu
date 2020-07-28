@@ -5,6 +5,10 @@
   max-width: 800px;
   margin: 0 auto;
   padding-bottom: 5rem;
+  display: grid;
+  grid-template-columns: 10fr 100px;
+  gap: 1rem;
+
   * {
     box-sizing: border-box;
   }
@@ -20,6 +24,7 @@
   // @import './general/reset.scss';
   @import "./general/typography.scss";
   @import "./general/inputs.scss";
+  @import "./components/sidebar.scss";
   @import "./components/loader.scss";
   @import "./components/box.scss";
   @import "./components/checkout.scss";

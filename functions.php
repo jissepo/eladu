@@ -2,6 +2,8 @@
 
 namespace JJ;
 
+use WP_Query;
+
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly.
 }
@@ -15,6 +17,7 @@ require_once 'includes/classes/class-acf-json.php';
  */
 class ThemeSetup
 {
+    private $api_key = "sC97khRmTVucZ33s5dDbc1mfYtuT-569tIYxNJxeHrH5_lz4H0yRppASO4r6gah-";
     /**
      * ThemeSetup constructor.
      */
@@ -31,6 +34,7 @@ class ThemeSetup
             new Woocommerce_Functions();
         }
         add_shortcode('jj_checkout', [$this, 'shortcode_html']);
+        add_shortcode('jj-get-free-boxes-count', [$this, 'get_free_boxes_count']);
     }
 
     /**
@@ -59,13 +63,8 @@ class ThemeSetup
         add_action('wp_ajax_validate_phone', [$this, 'validate_phone']);
         add_action('wp_ajax_nopriv_validate_phone', [$this, 'validate_phone']);
 
-        add_action('wp_ajax_jj_checkout', [$this, 'jj_checkout']);
-        add_action('wp_ajax_nopriv_jj_checkout', [$this, 'jj_checkout']);
-
-        add_action('woocommerce_add_order_item_meta', [$this, 'add_product_booking_dates_to_order'], 10, 3);
-
-        add_action('woocommerce_order_status_processing', [$this, 'save_product_booking_dates']);
-        add_action('woocommerce_order_status_cancelled', [$this, 'update_product_reservation_status']);
+        add_action('admin_post_send_cron_keys', [$this, 'send_cron_keys']);
+        add_action('admin_post_nopriv_send_cron_keys', [$this, 'send_cron_keys']);
         // add_action('woocommerce_thankyou', [$this, 'save_product_booking_dates']);
     }
 
@@ -249,7 +248,7 @@ class ThemeSetup
                 </ul>
             <?php endif; ?>
         </div>
-    <?php
+<?php
         exit;
     }
 
@@ -270,8 +269,9 @@ class ThemeSetup
          * @var WP_Term $term
          */
         foreach ($terms as $key => $term) {
+
             $returnValue[] = [
-                'label' => $term->name,
+                'label' => $term->name . " ({$this->get_free_boxes_count(['tag_id' =>$term->term_id])})",
                 'value' => $term->slug,
                 'href'  => get_field('term_maps_link', $term)
             ];
@@ -304,12 +304,26 @@ class ThemeSetup
                  * @var WC_Product $products
                  */
                 $product = \wc_get_product($post);
+                /**
+                 * @var \wpdb $wpdb
+                 */
+                global $wpdb;
+                $connected_products = $wpdb->get_col(
+                    $wpdb->prepare(
+                        "SELECT post_id FROM {$wpdb->postmeta}
+                            WHERE meta_key = 'jj_product_connected_extras' AND
+                            meta_value LIKE %s",
+                        "%\"{$product->get_id()}\"%"
+                    )
+                );
+
                 $returnValue[] = [
                     'label' => $product->get_name(),
                     'id' => $product->get_id(),
                     'price_html'  => $product->get_price_html(),
                     'price'  => $product->get_price(),
                     'tippy'  => get_field('tippy', $product->get_id()),
+                    'connected_products' => $connected_products,
                 ];
             }
 
@@ -322,10 +336,10 @@ class ThemeSetup
 
     public function get_available_boxes()
     {
-        $check_in_datetime = new \DateTime($_GET["checkIn"]);
-        $check_in_datetime = $check_in_datetime->setTimezone(\wp_timezone());
-        $check_out_datetime = new \DateTime($_GET["checkIn"]);
-        $check_out_datetime = $check_out_datetime->setTimezone(\wp_timezone());
+        // $check_in_datetime = new \DateTime($_GET["checkIn"]);
+        // $check_in_datetime = $check_in_datetime->setTimezone(\wp_timezone());
+        // $check_out_datetime = new \DateTime($_GET["checkOut"]);
+        // $check_out_datetime = $check_out_datetime->setTimezone(\wp_timezone());
 
         $selectedLocation = \sanitize_text_field($_GET["location"]);
 
@@ -429,6 +443,24 @@ class ThemeSetup
         return \ob_get_clean();
     }
 
+    public function get_free_boxes_count($atts)
+    {
+        global $wpdb;
+
+        $rows = $wpdb->get_col(
+            $wpdb->prepare(
+                "SELECT
+                    p.ID
+                FROM {$wpdb->posts} p
+                JOIN {$wpdb->term_relationships} tr ON tr.object_id = p.ID AND tr.term_taxonomy_id = %s
+                WHERE p.ID NOT IN (SELECT product_id from {$wpdb->box_reservations} WHERE status = 1)",
+                $atts['tag_id']
+            )
+        );
+
+        return count($rows);
+    }
+
     public function send_verification_code()
     {
         // Define recipients
@@ -438,7 +470,7 @@ class ThemeSetup
             $url = "https://gatewayapi.com/rest/mtsms";
             // $verfication_code = \substr(bin2hex(openssl_random_pseudo_bytes(16)), 0, 8);
             $verfication_code = \rand(10000000, 99999999);
-            $api_token = "sC97khRmTVucZ33s5dDbc1mfYtuT-569tIYxNJxeHrH5_lz4H0yRppASO4r6gah-";
+            $api_token = $this->api_key;
             $json = [
                 'sender' => 'Eladu OÜ',
                 'message' => __('Teie verifitseerimise kood on', THEME_TEXT_DOMAIN) . ': ' . $verfication_code,
@@ -461,6 +493,50 @@ class ThemeSetup
         }
         wp_send_json_error(__('Telefoni nr-ga oli probleeme. Kontrolliga palun üle, et on olemas eesliide +372.', THEME_TEXT_DOMAIN));
     }
+
+    public function send_cron_keys()
+    {
+        $keys_cron = get_option('jj_keys_cron', []);
+        foreach ($keys_cron as $timestamp => $boxes) {
+            if ($timestamp > time()) {
+                break;
+            }
+            foreach ($boxes as $key => $value) {
+                $user_id = $value['user_id'];
+                $product_id = $value['box_id'];
+
+                $recipients = [\get_user_meta($user_id, 'billing_phone', true)];
+                $url = "https://gatewayapi.com/rest/mtsms";
+                $api_token = $this->api_key;
+                $json = [
+                    'sender' => 'Eladu OÜ',
+                    'message' => __('Teie boksi kood on', THEME_TEXT_DOMAIN) . ': ' . \get_post_meta($product_id, 'jj_current_door_key', true),
+                    'recipients' => [],
+                ];
+                foreach ($recipients as $msisdn) {
+                    $json['recipients'][] = ['msisdn' => $msisdn];
+                }
+                $result = "";
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, $url);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, array("Content-Type: application/json"));
+                curl_setopt($ch, CURLOPT_USERPWD, $api_token . ":");
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($json));
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                $result = curl_exec($ch);
+                curl_close($ch);
+                $decoded = json_decode($result, TRUE);
+                if (isset($decoded['ids']) && !empty($decoded['ids'])) {
+                    unset($boxes[$key]);
+                }
+            }
+            if (empty($boxes)) {
+                unset($keys_cron[$timestamp]);
+            }
+        }
+        update_option('jj_keys_cron', $keys_cron, false);
+    }
+
     public function validate_phone()
     {
         // Define recipients
@@ -476,319 +552,6 @@ class ThemeSetup
         }
         wp_send_json_error(__('Telefoni nr-ga oli probleeme. Kontrolliga palun üle, et on olemas eesliide +372.', THEME_TEXT_DOMAIN));
     }
-
-    public function jj_checkout()
-    {
-        $check_in_date = \strtotime(sanitize_text_field($_POST["checkIn"])) + \DAY_IN_SECONDS;
-        $check_out_date = \strtotime(sanitize_text_field($_POST["checkOut"])) + \DAY_IN_SECONDS;
-        $selected_location = sanitize_text_field($_POST["location"]);
-        $selected_box_id = sanitize_text_field($_POST["box"]);
-        $selected_extras = $_POST["selected_extras"];
-        $_POST["billing_postcode"] = 13245;
-
-        WC()->cart->empty_cart();
-
-        $terms = \get_the_terms($selected_box_id, 'product_tag');
-        if (\is_wp_error($terms) || $terms === false) {
-            \wp_send_json_error(__('Valitud boksiga ei ole seotud asukohta. Palun vali uus boks või võta ühendust adminiga.', THEME_TEXT_DOMAIN));
-        }
-        /**
-         * @var WP_Term $term
-         */
-        $foundMatchingTerm = \false;
-        foreach ($terms as $key => $term) {
-            if ($term->slug === $selected_location) {
-                $foundMatchingTerm = true;
-            }
-        }
-        if (!$foundMatchingTerm) {
-            \wp_send_json_error(__('Valitud boks ei sobi kokku valitud asukohaga. Palun vali uus boks või võta ühendust adminiga.', THEME_TEXT_DOMAIN));
-        }
-
-        $check_in_datetime = new \DateTime("@$check_in_date");
-        $check_out_datetime = new \DateTime("@$check_out_date");
-
-        WC()->cart->add_to_cart($selected_box_id, 1, 0, [], [
-            'check_in_date' => $check_in_datetime->format('Y-m-d'),
-            'check_out_date' => $check_out_datetime->format('Y-m-d'),
-        ]);
-        if (!empty($selected_extras)) {
-            foreach ($selected_extras as $key => &$extra) {
-                $extra = sanitize_text_field($extra);
-                WC()->cart->add_to_cart($extra);
-            }
-        }
-        \wc_maybe_define_constant('WOOCOMMERCE_CHECKOUT', true);
-        WC()->checkout()->process_checkout();
-    }
-
-    public function add_product_booking_dates_to_order($item_id, $values, $cart_item_key)
-    {
-        if (isset($values['check_in_date'])) {
-            wc_add_order_item_meta($item_id, 'Alguskuupäev', $values['check_in_date']);
-        }
-        if (isset($values['check_in_date'], $values['check_out_date']) && $values['check_in_date'] == $values['check_out_date']) {
-            wc_add_order_item_meta($item_id, 'Lõppkuupäev', $values['check_out_date']);
-        }
-    }
-
-    public function save_product_booking_dates($order_id)
-    {
-        /**
-         * @var \wpdb $wpdb
-         */
-        global $wpdb;
-        $order = \wc_get_order($order_id);
-
-        $order_items = $order->get_items();
-        if (!empty($order_items)) {
-
-            /**
-             * @var \WC_Order_Item_Product $order_line_item
-             */
-            foreach ($order_items as $key => $order_line_item) {
-                $product_id = $order_line_item->get_product_id();
-                $check_in_date = $order_line_item->get_meta('Alguskuupäev');
-                $check_out_date = $order_line_item->get_meta('Lõppkuupäev');
-
-                if (!empty($check_in_date) && !empty($check_out_date)) {
-                    $wpdb->insert(
-                        $wpdb->box_reservations,
-                        [
-                            'product_id'    => $product_id,
-                            'order_id'      => $order_id,
-                            'check_in_date' => $check_in_date,
-                            'check_out_date' => $check_in_date === $check_out_date ? null : $check_out_date,
-                        ]
-                    );
-                }
-            }
-        }
-    }
-
-    public function update_product_reservation_status($order_id)
-    {
-        /** @var \wpdb $wpdb */
-        global $wpdb;
-
-        $wpdb->update($wpdb->box_reservations, ['status' => 0], ['order_id' => $order_id]);
-    }
 }
 
 new ThemeSetup();
-
-abstract class Meta_box
-{
-    public static function add()
-    {
-        $screens = ['product'];
-        foreach ($screens as $screen) {
-            add_meta_box(
-                'jj_box_id',          // Unique ID
-                'Boksi reserveeringud', // Box title
-                [self::class, 'html'],   // Content callback, must be of type callable
-                $screen,                  // Post type
-                'normal',
-                'high'
-            );
-        }
-    }
-
-    public static function html($post)
-    {
-        /**
-         * @var \wpdb $wpdb
-         */
-        global $wpdb;
-        $rows = $wpdb->get_results(
-            $wpdb->prepare(
-                "SELECT * FROM {$wpdb->box_reservations} WHERE product_id=%s AND `status`=1 AND (check_out_date>NOW() OR check_out_date IS NULL)",
-                $post->ID
-            )
-        );
-    ?>
-        <script>
-            // window.datepicker_locale = JSON.parse('<?= \json_encode(ThemeSetup::get_datepicker_locale()); ?>');
-        </script>
-        <div id='app'>
-            <v-date-picker :mode='mode' v-model='selectedDate' is-expanded :columns="$screens({ default: 1, lg: 2 })" :rows="$screens({ default: 1, lg: 2 })" is-inline :attributes='attributes' />
-        </div>
-
-        <!-- 1. Link Vue Javascript -->
-        <script src='https://unpkg.com/vue/dist/vue.js'></script>
-
-        <!-- 2. Link VCalendar Javascript (Plugin automatically installed) -->
-        <script src='https://unpkg.com/v-calendar'></script>
-
-        <!--3. Create the Vue instance-->
-        <script>
-            new Vue({
-                el: '#app',
-                data: {
-                    mode: 'single',
-                    selectedDate: null
-                },
-                computed: {
-                    attributes() {
-                        let reservations = JSON.parse('<?= \json_encode($rows); ?>');
-                        console.log(reservations);
-                        if (reservations.length) {
-
-                            const themes = ['blue', 'red', 'purple', 'green', 'yellow'];
-                            let iterator = 0;
-                            return reservations.map((reservation, index) => {
-                                iterator = iterator > themes.length ? 0 : iterator
-                                return {
-                                    key: 'reserved_' + reservation.order_id,
-                                    highlight: themes[iterator++],
-                                    dates: [{
-                                        start: new Date(reservation.check_in_date),
-                                        end: reservation.check_out_date === null ? null : new Date(reservation.check_out_date)
-                                    }]
-                                }
-                            });
-                        }
-                        return [];
-                    }
-                }
-            })
-        </script>
-<?php
-    }
-}
-
-add_action('add_meta_boxes', ['JJ\Meta_box', 'add']);
-
-if (isset($_GET['generate_products'])) {
-    add_action('init', function () {
-        $terms = \get_terms([
-            'taxonomy' => 'product_tag',
-            'hide_empty' => false,
-        ]);
-
-        /**
-         * @var WP_Term $term
-         */
-        foreach ($terms as $key => $term) {
-            for ($i = 0; $i < 20; $i++) {
-                $item = array(
-                    'Name' => 'Boks ' . $i,
-                    'Description' => '',
-                    'SKU' => \substr($term->slug, 0, 3) . '-' . $i,
-                );
-                $user_id = get_current_user(); // this has NO SENSE AT ALL, because wp_insert_post uses current user as default value
-                // $user_id = $some_user_id_we_need_to_use; // So, user is selected..
-                $post_id = wp_insert_post(array(
-                    'post_author' => $user_id,
-                    'post_title' => $item['Name'],
-                    'post_content' => $item['Description'],
-                    'post_status' => 'publish',
-                    'post_type' => "product",
-                ));
-                wp_set_object_terms($post_id, 'simple', 'product_type');
-                wp_set_object_terms($post_id, 'boks', 'product_cat');
-                wp_set_object_terms($post_id, $term->slug, 'product_tag');
-                update_post_meta($post_id, '_visibility', 'visible');
-                update_post_meta($post_id, '_stock_status', 'instock');
-                update_post_meta($post_id, 'total_sales', '0');
-                update_post_meta($post_id, '_downloadable', 'no');
-                update_post_meta($post_id, '_virtual', 'yes');
-                update_post_meta($post_id, '_purchase_note', '');
-                update_post_meta($post_id, '_featured', 'no');
-                update_post_meta($post_id, '_weight', '');
-                update_post_meta($post_id, '_length', '');
-                update_post_meta($post_id, '_width', '');
-                update_post_meta($post_id, '_height', '');
-                update_post_meta($post_id, '_sku', $item['SKU']);
-                update_post_meta($post_id, '_product_attributes', array());
-                update_post_meta($post_id, '_sale_price_dates_from', '');
-                update_post_meta($post_id, '_sale_price_dates_to', '');
-                update_post_meta($post_id, '_sold_individually', '');
-                update_post_meta($post_id, '_manage_stock', 'no');
-                update_post_meta($post_id, '_backorders', 'no');
-                update_post_meta($post_id, '_stock', '');
-
-                $product = \wc_get_product($post_id);
-
-                $product->set_regular_price(rand(25, 45));
-                if (rand(1, 10) > 5) {
-                    $product->set_sale_price(rand(15, 25));
-                }
-                $product->save();
-            }
-        }
-    });
-}
-
-if (isset($_GET['remove_products'])) {
-    add_action('init', function () {
-        $products = new \WP_Query([
-            'post_type' => 'product',
-            'status'    => 'publish',
-            'posts_per_page' => -1,
-            'tax_query' => [
-                [
-                    'taxonomy'        => 'product_cat',
-                    'field'           => 'slug',
-                    'terms'           =>  array('boks'),
-                    'operator'        => 'IN',
-                ]
-            ]
-
-        ]);
-
-        /**
-         * @var WP_Term $term
-         */
-        foreach ($products->posts as $key => $post) {
-            wh_deleteProduct($post->ID, true);
-        }
-    });
-}
-
-/**
- * Method to delete Woo Product
- *
- * @param int $id the product ID.
- * @param bool $force true to permanently delete product, false to move to trash.
- * @return \WP_Error|boolean
- */
-function wh_deleteProduct($id, $force = FALSE)
-{
-    $product = wc_get_product($id);
-
-    if (empty($product))
-        return new \WP_Error(999, sprintf(__('No %s is associated with #%d', 'woocommerce'), 'product', $id));
-
-    // If we're forcing, then delete permanently.
-    if ($force) {
-        if ($product->is_type('variable')) {
-            foreach ($product->get_children() as $child_id) {
-                $child = wc_get_product($child_id);
-                $child->delete(true);
-            }
-        } elseif ($product->is_type('grouped')) {
-            foreach ($product->get_children() as $child_id) {
-                $child = wc_get_product($child_id);
-                $child->set_parent_id(0);
-                $child->save();
-            }
-        }
-
-        $product->delete(true);
-        $result = $product->get_id() > 0 ? false : true;
-    } else {
-        $product->delete();
-        $result = 'trash' === $product->get_status();
-    }
-
-    if (!$result) {
-        return new \WP_Error(999, sprintf(__('This %s cannot be deleted', 'woocommerce'), 'product'));
-    }
-
-    // Delete parent product transients.
-    if ($parent_id = wp_get_post_parent_id($id)) {
-        wc_delete_product_transients($parent_id);
-    }
-    return true;
-}
