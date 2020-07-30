@@ -2,6 +2,8 @@
 
 namespace JJ;
 
+use WP_Query;
+
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly.
 }
@@ -108,7 +110,7 @@ class Woocommerce_Functions
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($rows as $row) : if($location !== $row->name) continue;?>
+                        <?php foreach ($rows as $row) : if ($location !== $row->name) continue; ?>
                             <tr>
                                 <td><?= $row->post_title; ?></td>
                                 <td><?= $row->name; ?></td>
@@ -297,9 +299,9 @@ class Woocommerce_Functions
         $selected_location = sanitize_text_field($_POST["location"]);
         $selected_box_id = sanitize_text_field($_POST["box"]);
         $selected_extras = $_POST["selected_extras"];
-        $_POST["billing_postcode"] = 13245;
 
         WC()->cart->empty_cart();
+
 
         $terms = \get_the_terms($selected_box_id, 'product_tag');
         if (\is_wp_error($terms) || $terms === false) {
@@ -581,9 +583,53 @@ if (isset($_GET['generate_products'])) {
                 $product->save();
             }
         }
+        // connect_extras_to_boxes();
     });
 }
 
+
+
+
+if (isset($_GET['connect_extras_to_boxes'])) {
+    add_action('init', function () {
+        $boxes = new WP_Query([
+            'post_type' => 'product',
+            'post_status' => 'publish',
+            'posts_per_page' => -1,
+            'tax_query' => [
+                [
+                    'taxonomy' => 'product_cat',
+                    'field'    => 'slug',
+                    'terms' => ['boks']
+                ]
+            ]
+        ]);
+        $extras = new WP_Query([
+            'post_type' => 'product',
+            'post_status' => 'publish',
+            'posts_per_page' => -1,
+            'fields'  => 'ids',
+            'tax_query' => [
+                [
+                    'taxonomy' => 'product_cat',
+                    'field'    => 'slug',
+                    'terms' => ['lisateenus']
+                ]
+            ]
+        ]);
+        foreach ($boxes->posts as $key => $post) {
+            \update_post_meta(
+                $post->ID,
+                'jj_product_connected_extras',
+                \array_map(function($a)
+                {
+                    return (string)$a;
+                }, array_rand(array_flip($extras->posts), 4))
+            );
+        }
+        exit;
+    });
+}
 if (isset($_GET['remove_products'])) {
     add_action('init', function () {
         $products = new \WP_Query([

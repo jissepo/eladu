@@ -1,3 +1,29 @@
-.container__right {
-  margin-top: calc(1.5rem + 30px);
+.price__floater {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  left: 0;
+  background-color: $main;
+  display: flex;
+  justify-content: center;
+  padding: 0.5rem;
+  z-index: 2;
+
+  &_box {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: space-around;
+    align-content: center;
+    width: 100%;
+    margin: 0 auto;
+    max-width: 800px;
+
+    p {
+      font-weight: 500;
+      &.active {
+        color: $white !important;
+      }
+    }
+  }
 }

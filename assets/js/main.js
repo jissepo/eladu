@@ -38,6 +38,7 @@ new Vue({
   el: "#vue--checkout",
   data: {
     canShowContact: false,
+    highestStep: 0,
     loader: {
       isLoading: true,
       isFixedTop: false,
@@ -50,11 +51,10 @@ new Vue({
     },
     location: {
       locations: [],
-      boxes: [],
       displayIframe: false,
     },
     extras: {
-      available: [],
+      // available: [],
       selected: [],
     },
     datepicker: {
@@ -95,6 +95,20 @@ new Vue({
     },
   },
   computed: {
+    currentStep() {
+      if (
+        this.highestStep === 3 ||
+        (this.checkout.box && this.mobile.validated)
+      ) {
+        this.highestStep = 3;
+        return 3;
+      }
+      if (this.highestStep === 2 || this.checkout.box || this.canShowContact) {
+        this.highestStep = 2;
+        return 2;
+      }
+      return 1;
+    },
     totalSum() {
       let sum = 0;
       if (this.checkout.box) {
@@ -179,7 +193,10 @@ new Vue({
       if (!this.checkout.fields.email) {
         errors.push("E-mail peab olema sisestatud.");
       }
-      if (!EmailValidator.validate(this.checkout.fields.email.trim())) {
+      if (
+        this.checkout.fields.email &&
+        !EmailValidator.validate(this.checkout.fields.email.trim())
+      ) {
         errors.push("Palun kontrollige üle e-mail.");
       }
       if (!this.checkout.fields.address) {
@@ -200,29 +217,30 @@ new Vue({
       }
       return new Date(Date.now() + 12096e5);
     },
-    boxExtras() {
-      if (this.checkout.box === null) {
-        return [];
-      }
-      const self = this;
+    // boxExtras() {
+    //   if (this.checkout.box === null) {
+    //     return [];
+    //   }
+    //   const self = this;
 
-      return this.extras.available.filter(
-        (extra) =>
-          extra.connected_products.findIndex(
-            (extra_box) => parseInt(extra_box) === self.checkout.box.value
-          ) !== -1
-      );
-    },
+    //   return this.extras.available.filter(
+    //     (extra) =>
+    //       extra.connected_products.findIndex(
+    //         (extra_box) => parseInt(extra_box) === self.checkout.box.value
+    //       ) !== -1
+    //   );
+    // },
   },
   watch: {
     "checkout.location": function (newVal, oldVal) {
-      this.updateAvailableBoxes();
+      this.highestStep = this.highestStep === 0 ? 1 : this.highestStep;
+      this.updateAvailableBoxes(false);
     },
     "datepicker.checkIn": function (newVal, oldVal) {
-      this.updateAvailableBoxes();
+      this.updateAvailableBoxes(true);
     },
     "datepicker.checkOut": function (newVal, oldVal) {
-      this.updateAvailableBoxes();
+      this.updateAvailableBoxes(true);
     },
     "checkout.box": function (newVal, oldVal) {
       if (!this.canShowContact) {
@@ -386,21 +404,21 @@ new Vue({
       });
   },
   mounted: function () {
-    const self = this;
-    this.$nextTick(function () {
-      this.axios
-        .get(`${php_object.ajax_url}?action=get_available_extras`)
-        .then(function (response) {
-          if (response.data.success) {
-            self.extras.available = response.data.data;
-          } else {
-            console.log(response.data);
-          }
-        })
-        .catch(function (error) {
-          console.log(error);
-        });
-    });
+    // const self = this;
+    // this.$nextTick(function () {
+    //   this.axios
+    //     .get(`${php_object.ajax_url}?action=get_available_extras`)
+    //     .then(function (response) {
+    //       if (response.data.success) {
+    //         self.extras.available = response.data.data;
+    //       } else {
+    //         console.log(response.data);
+    //       }
+    //     })
+    //     .catch(function (error) {
+    //       console.log(error);
+    //     });
+    // });
   },
   methods: {
     loaderScrollHandler: function (event) {
@@ -432,6 +450,7 @@ new Vue({
     updateCheckInDate: function (event) {
       this.datepicker.checkOut = null;
       this.datepicker.checkIn = event;
+      this.highestStep = this.highestStep === 0 ? 1 : this.highestStep;
     },
     changeSelectedExtra: function (event, extra) {
       // TODO: Validate that this actually works when products are in.
@@ -456,8 +475,12 @@ new Vue({
         .then(function (response) {
           if (response.data.success) {
             if (response.data.data) {
-              self.mobile.code = response.data.data;
+              self.mobile.success = response.data.data.message;
+              if (response.data.data.verify) {
+                self.mobile.code = response.data.data.verify;
+              }
             }
+            self.mobile.error = null;
           } else {
             self.mobile.validated = false;
             self.mobile.error = response.data.data;
@@ -469,7 +492,26 @@ new Vue({
           self.loader.isLoading = false;
         });
     },
+    getSelectedLocationIndex() {
+      return this.location.locations.findIndex(
+        (storageLocation) =>
+          this.checkout.location &&
+          storageLocation.value === this.checkout.location.value
+      );
+    },
 
+    locationHasBoxes() {
+      if (this.getSelectedLocationIndex() === -1) {
+        return false;
+      }
+      return (
+        this.location.locations[this.getSelectedLocationIndex()].boxes !==
+        undefined
+      );
+    },
+    addLocationBoxes(boxes) {
+      this.location.locations[this.getSelectedLocationIndex()].boxes = boxes;
+    },
     validatePhone: function () {
       const self = this;
       self.loader.isLoading = true;
@@ -546,9 +588,15 @@ new Vue({
           self.loader.isLoading = false;
         });
     },
-    updateAvailableBoxes() {
+    updateAvailableBoxes(force) {
       const self = this;
-      if (this.datepicker.checkIn && this.checkout.location) {
+      if (
+        this.datepicker.checkIn &&
+        this.checkout.location &&
+        !this.locationHasBoxes()
+        ||
+        force
+      ) {
         self.loader.isLoading = true;
         this.axios
           .get(`${php_object.ajax_url}?action=get_available_boxes`, {
@@ -560,9 +608,9 @@ new Vue({
           })
           .then(function (response) {
             if (response.data.success) {
-              self.location.boxes = response.data.data;
+              self.addLocationBoxes(response.data.data);
             }
-
+            self.checkout.box = null;
             self.loader.isLoading = false;
           })
           .catch(function (error) {
@@ -571,7 +619,7 @@ new Vue({
             self.loader.isLoading = false;
           });
       } else {
-        this.location.boxes = [];
+        // this.location.boxes = [];
         this.checkout.box = null;
       }
     },

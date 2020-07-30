@@ -1,6 +1,8 @@
 @import "../../../node_modules/vue-select/src/scss/vue-select.scss";
 .v-select {
-  height: 100%;
+  height: 60px;
+  background-color: $white;
+
   .vs__dropdown-toggle,
   .vs__selected,
   .vs__search {

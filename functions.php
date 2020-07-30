@@ -51,8 +51,8 @@ class ThemeSetup
         add_action('wp_ajax_get_storage_locations', [$this, 'get_storage_locations']);
         add_action('wp_ajax_nopriv_get_storage_locations', [$this, 'get_storage_locations']);
 
-        add_action('wp_ajax_get_available_extras', [$this, 'get_available_extras']);
-        add_action('wp_ajax_nopriv_get_available_extras', [$this, 'get_available_extras']);
+        // add_action('wp_ajax_get_available_extras', [$this, 'get_available_extras']);
+        // add_action('wp_ajax_nopriv_get_available_extras', [$this, 'get_available_extras']);
 
         add_action('wp_ajax_get_available_boxes', [$this, 'get_available_boxes']);
         add_action('wp_ajax_nopriv_get_available_boxes', [$this, 'get_available_boxes']);
@@ -155,7 +155,7 @@ class ThemeSetup
      */
     public function jj_theme_enqueue_scripts_and_styles()
     {
-        $asset_version = wp_get_theme()->get('Version');
+        $asset_version = '1.0.5';
 
         $parent_style = 'parent-style'; // This is 'twentyfifteen-style' for the Twenty Fifteen theme.
 
@@ -273,7 +273,9 @@ class ThemeSetup
             $returnValue[] = [
                 'label' => $term->name . " ({$this->get_free_boxes_count(['tag_id' =>$term->term_id])})",
                 'value' => $term->slug,
-                'href'  => get_field('term_maps_link', $term)
+                'href'  => \get_field('term_maps_link', $term),
+                'image'  => \get_field('storage_layout', $term),
+                'extras'  => $this->get_available_extras(get_field('jj_product_connected_extras', $term)),
             ];
         }
 
@@ -281,29 +283,16 @@ class ThemeSetup
         \wp_send_json_success($returnValue);
     }
 
-    public function get_available_extras()
+    public function get_available_extras($product_ids)
     {
-        $products = new \WP_Query([
-            'post_type' => 'product',
-            'status'    => 'publish',
-            'limit'     => -1,
-            'tax_query' => [
-                [
-                    'taxonomy'        => 'product_cat',
-                    'field'           => 'slug',
-                    'terms'           =>  array('lisateenus'),
-                    'operator'        => 'IN',
-                ]
-            ]
 
-        ]);
-
-        if (count($products->posts)) {
-            foreach ($products->posts as $key => $post) {
+        if (count($product_ids)) {
+            $returnValue = [];
+            foreach ($product_ids as $key => $post_id) {
                 /**
                  * @var WC_Product $products
                  */
-                $product = \wc_get_product($post);
+                $product = \wc_get_product($post_id);
                 /**
                  * @var \wpdb $wpdb
                  */
@@ -328,9 +317,9 @@ class ThemeSetup
             }
 
 
-            \wp_send_json_success($returnValue);
+            return $returnValue;
         } else {
-            \wp_send_json_error(__('Lisateenuseid ei leitud', THEME_TEXT_DOMAIN));
+            return [];
         }
     }
 
@@ -465,7 +454,7 @@ class ThemeSetup
     {
         // Define recipients
         $mobile = trim(sanitize_text_field($_GET['phone_nr']));
-        if ($mobile && \strpos($mobile, '+372') !== false && trim(\substr($mobile, 3)) !== "") {
+        if ($mobile && \strpos($mobile, '+372') !== false && \strlen(\trim($mobile)) > strlen('+372')) {
             $recipients = [$mobile];
             $url = "https://gatewayapi.com/rest/mtsms";
             // $verfication_code = \substr(bin2hex(openssl_random_pseudo_bytes(16)), 0, 8);
@@ -479,7 +468,7 @@ class ThemeSetup
             foreach ($recipients as $msisdn) {
                 $json['recipients'][] = ['msisdn' => $msisdn];
             }
-            \update_option($mobile, $verfication_code, false);
+            \update_option(\esc_attr($mobile), $verfication_code, false);
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $url);
             curl_setopt($ch, CURLOPT_HTTPHEADER, array("Content-Type: application/json"));
@@ -488,8 +477,13 @@ class ThemeSetup
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             // $result = curl_exec($ch);
             curl_close($ch);
-            // wp_send_json_success();
-            wp_send_json_success($verfication_code); // For automatic filling when testing
+            // wp_send_json_success(['message' => __('Teie telefoni nr on saadetud sõnum valideerimis koodiga.', THEME_TEXT_DOMAIN)]);
+            wp_send_json_success(['message' => __('Teie telefoni nr on saadetud sõnum valideerimis koodiga.', THEME_TEXT_DOMAIN), 'verify' => $verfication_code ]);
+            // wp_send_json_success($verfication_code); // For automatic filling when testing
+        }
+        if (\strlen(\trim($mobile)) <= strlen('+372')) {
+            wp_send_json_error(__('Palun sisestage korrektne telefoni nr.', THEME_TEXT_DOMAIN));
+            # code...
         }
         wp_send_json_error(__('Telefoni nr-ga oli probleeme. Kontrolliga palun üle, et on olemas eesliide +372.', THEME_TEXT_DOMAIN));
     }
@@ -542,13 +536,17 @@ class ThemeSetup
         // Define recipients
         $mobile = trim(sanitize_text_field($_GET['phone_nr']));
         $code = trim(sanitize_text_field($_GET['code']));
-        if ($mobile && \strpos($mobile, '+372') !== false && trim(\substr($mobile, 3)) !== "") {
+        if ($mobile && \strpos($mobile, '+372') !== false && \strlen(\trim($mobile)) > strlen('+372')) {
             if (trim($code) !== "") {
-                if (get_option($mobile, null) === $code) {
+                if (get_option(\esc_attr($mobile), null) === $code) {
                     \wp_send_json_success();
                 }
+                wp_send_json_error(__('Valideerimiskood on ebakorrektne. Palun proovige uuesti', THEME_TEXT_DOMAIN));
             }
             wp_send_json_error(__('Valideerimiskoodiga oli probleeme. Palun kontrolliga, et kood on sisestatud', THEME_TEXT_DOMAIN));
+        }
+        if (\strlen(\trim($mobile)) <= strlen('+372')) {
+            wp_send_json_error(__('Palun sisestage korrektne telefoni nr.', THEME_TEXT_DOMAIN));
         }
         wp_send_json_error(__('Telefoni nr-ga oli probleeme. Kontrolliga palun üle, et on olemas eesliide +372.', THEME_TEXT_DOMAIN));
     }

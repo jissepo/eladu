@@ -1,7 +1,7 @@
 input {
   width: 100%;
   height: 35px;
-  background-color: #fff;
+  background-color: #ffffff !important;
   margin-bottom: 0.5rem;
   padding: 0.3rem 0.7rem;
   background: none;
@@ -33,7 +33,7 @@ input {
     color: $white !important;
 
     &[disabled] {
-      background: $light-gray!important;
+      background: $light-gray !important;
     }
   }
 }

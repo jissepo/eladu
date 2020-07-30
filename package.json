@@ -5,8 +5,8 @@
   "main": "./assets/js/src/index.js",
   "scripts": {
     "start": "node-sass --watch ./assets/scss/main.scss -o ./assets/css",
-    "webpack": "webpack --watch --config webpack.config.js ",
-    "webpack:production": "webpack --config webpack.production.config.js"
+    "build": "node-sass  ./assets/scss/main.scss -o ./assets/css --output-style compressed && webpack --config webpack.production.config.js",
+    "webpack": "webpack --watch --config webpack.config.js "
   },
   "author": "",
   "license": "ISC",

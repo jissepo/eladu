@@ -2,21 +2,24 @@
   &__container {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
     gap: 1rem;
     align-items: start;
 
-    & > div {
-      height: 60px;
-    }
-
-    @media screen and (max-width: 600px) {
+    @media screen and (max-width: 700px) {
       grid-template-columns: 1fr;
     }
   }
 
   &__location {
     align-self: start;
+  }
+
+  &__selected {
+    h2 {
+      font-weight: 600;
+      font-size: 1em;
+      margin: 0 0 1rem;
+    }
   }
 
   &__date,
@@ -132,12 +135,21 @@
           right: 10rem;
           border-radius: inherit;
           border-bottom-left-radius: $button-border-radius;
+
+          @media screen and (max-width: 700px) {
+            top: 2rem;
+            right: 2rem;
+          }
         }
       }
 
       &-iframe {
         padding: 10rem;
         height: 100%;
+
+        @media screen and (max-width: 700px) {
+          padding: 2rem;
+        }
 
         iframe {
           height: 100%;
@@ -146,7 +158,19 @@
       }
     }
   }
+  &__layout {
+    grid-column-start: 1;
+    grid-column-end: 3;
 
+
+    @media screen and (max-width: 700px) {
+      grid-column-start: 1;
+      grid-column-end: 2;
+    }
+    img {
+      width: 100%;
+    }
+  }
   .striketrough,
   .striketrough span {
     pointer-events: none;
