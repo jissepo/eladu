@@ -39,6 +39,7 @@ new Vue({
   data: {
     canShowContact: false,
     highestStep: 0,
+    countries: [],
     loader: {
       isLoading: true,
       isFixedTop: false,
@@ -206,7 +207,7 @@ new Vue({
         errors.push("Piirkond peab olema sisestatud.");
       }
       if (!this.checkout.fields.country) {
-        errors.push("Riik peab olema sisestatud.");
+        errors.push("Riik peab olema valitud.");
       }
 
       return errors;
@@ -217,19 +218,6 @@ new Vue({
       }
       return new Date(Date.now() + 12096e5);
     },
-    // boxExtras() {
-    //   if (this.checkout.box === null) {
-    //     return [];
-    //   }
-    //   const self = this;
-
-    //   return this.extras.available.filter(
-    //     (extra) =>
-    //       extra.connected_products.findIndex(
-    //         (extra_box) => parseInt(extra_box) === self.checkout.box.value
-    //       ) !== -1
-    //   );
-    // },
   },
   watch: {
     "checkout.location": function (newVal, oldVal) {
@@ -404,21 +392,19 @@ new Vue({
       });
   },
   mounted: function () {
-    // const self = this;
-    // this.$nextTick(function () {
-    //   this.axios
-    //     .get(`${php_object.ajax_url}?action=get_available_extras`)
-    //     .then(function (response) {
-    //       if (response.data.success) {
-    //         self.extras.available = response.data.data;
-    //       } else {
-    //         console.log(response.data);
-    //       }
-    //     })
-    //     .catch(function (error) {
-    //       console.log(error);
-    //     });
-    // });
+    const self = this;
+    this.axios
+      .get(`${php_object.ajax_url}?action=get_available_countries`)
+      .then(function (response) {
+        if (response.data.success) {
+          self.countries = response.data.data;
+        } else {
+          console.error(response.data);
+        }
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
   },
   methods: {
     loaderScrollHandler: function (event) {
@@ -546,7 +532,7 @@ new Vue({
         location: this.checkout.location.value,
         box: this.checkout.box.value,
         order_comments: "",
-        billing_country: this.checkout.country.toUpperCase(),
+        billing_country: this.checkout.country.code,
         billing_address_1: this.checkout.fields.address,
         billing_postcode: this.checkout.fields.postcode,
         billing_city: this.checkout.fields.jurisdiction,
@@ -591,10 +577,9 @@ new Vue({
     updateAvailableBoxes(force) {
       const self = this;
       if (
-        this.datepicker.checkIn &&
-        this.checkout.location &&
-        !this.locationHasBoxes()
-        ||
+        (this.datepicker.checkIn &&
+          this.checkout.location &&
+          !this.locationHasBoxes()) ||
         force
       ) {
         self.loader.isLoading = true;

@@ -139,7 +139,7 @@
 							<input type="text" placeholder="<?php _e('Vald, linn, asula või küla', THEME_TEXT_DOMAIN); ?>" v-model="checkout.fields.jurisdiction">
 						</div>
 						<div class="checkout__fields--single">
-							<input type="text" placeholder="<?php _e('Riik', THEME_TEXT_DOMAIN); ?>" v-model="checkout.fields.country">
+							<v-select placeholder="<?php _e('Riik', THEME_TEXT_DOMAIN); ?>" v-model="checkout.fields.country" :options="countries"></v-select>
 						</div>
 					</div>
 				</div>
@@ -222,9 +222,9 @@
 	</form>
 	<div class="price__floater" v-if="highestStep !== 0">
 		<div class="price__floater_box">
-			<p :class="{active:currentStep >= 1}"><?php echo esc_attr_e('Vali ladu', THEME_TEXT_DOMAIN);?></p>
-			<p :class="{active:currentStep >= 2}"><?php echo esc_attr_e('Kontaktandmed', THEME_TEXT_DOMAIN);?></p>
-			<p :class="{active:currentStep >= 3}"><?php echo esc_attr_e('Maksmine', THEME_TEXT_DOMAIN);?></p>
+			<p :class="{active:currentStep >= 1}"><?php echo esc_attr_e('Vali ladu', THEME_TEXT_DOMAIN); ?></p>
+			<p :class="{active:currentStep >= 2}"><?php echo esc_attr_e('Kontaktandmed', THEME_TEXT_DOMAIN); ?></p>
+			<p :class="{active:currentStep >= 3}"><?php echo esc_attr_e('Maksmine', THEME_TEXT_DOMAIN); ?></p>
 			<p class="active"><strong><?= __('Summa', THEME_TEXT_DOMAIN); ?>:</strong> <span :inner-html.prop="totalSum | formatSum"></span> <span v-if="totalSum !== 0">(<?php _e('sisaldab 20% käibemaksu', THEME_TEXT_DOMAIN); ?>)</span></p>
 		</div>
 	</div>

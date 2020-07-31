@@ -54,6 +54,9 @@ class ThemeSetup
         // add_action('wp_ajax_get_available_extras', [$this, 'get_available_extras']);
         // add_action('wp_ajax_nopriv_get_available_extras', [$this, 'get_available_extras']);
 
+        add_action('wp_ajax_get_available_countries', [$this, 'get_available_countries']);
+        add_action('wp_ajax_nopriv_get_available_countries', [$this, 'get_available_countries']);
+
         add_action('wp_ajax_get_available_boxes', [$this, 'get_available_boxes']);
         add_action('wp_ajax_nopriv_get_available_boxes', [$this, 'get_available_boxes']);
 
@@ -155,7 +158,7 @@ class ThemeSetup
      */
     public function jj_theme_enqueue_scripts_and_styles()
     {
-        $asset_version = '1.0.5';
+        $asset_version = '1.0.7';
 
         $parent_style = 'parent-style'; // This is 'twentyfifteen-style' for the Twenty Fifteen theme.
 
@@ -323,6 +326,21 @@ class ThemeSetup
         }
     }
 
+
+    public function get_available_countries()
+    {
+        $countries_obj   = new \WC_Countries();
+        $returnArray = [];
+
+        foreach (WC()->countries->get_allowed_countries() as $code => $label) {
+            $returnArray[] = [
+                'code'  => $code,
+                'label' => $label
+            ];
+        }
+        \wp_send_json_success($returnArray);
+    }
+
     public function get_available_boxes()
     {
         // $check_in_datetime = new \DateTime($_GET["checkIn"]);
@@ -475,10 +493,10 @@ class ThemeSetup
             curl_setopt($ch, CURLOPT_USERPWD, $api_token . ":");
             curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($json));
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            // $result = curl_exec($ch);
+            $result = curl_exec($ch);
             curl_close($ch);
-            // wp_send_json_success(['message' => __('Teie telefoni nr on saadetud sõnum valideerimis koodiga.', THEME_TEXT_DOMAIN)]);
-            wp_send_json_success(['message' => __('Teie telefoni nr on saadetud sõnum valideerimis koodiga.', THEME_TEXT_DOMAIN), 'verify' => $verfication_code ]);
+            wp_send_json_success(['message' => __('Teie telefoni nr on saadetud sõnum valideerimis koodiga.', THEME_TEXT_DOMAIN)]);
+            wp_send_json_success(['message' => __('Teie telefoni nr on saadetud sõnum valideerimis koodiga.', THEME_TEXT_DOMAIN), 'verify' => $verfication_code]);
             // wp_send_json_success($verfication_code); // For automatic filling when testing
         }
         if (\strlen(\trim($mobile)) <= strlen('+372')) {
