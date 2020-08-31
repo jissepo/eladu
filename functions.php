@@ -158,7 +158,7 @@ class ThemeSetup
      */
     public function jj_theme_enqueue_scripts_and_styles()
     {
-        $asset_version = '1.0.7';
+        $asset_version = '1.0.8';
 
         $parent_style = 'parent-style'; // This is 'twentyfifteen-style' for the Twenty Fifteen theme.
 
@@ -495,8 +495,8 @@ class ThemeSetup
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             $result = curl_exec($ch);
             curl_close($ch);
-            wp_send_json_success(['message' => __('Teie telefoni nr on saadetud sõnum valideerimis koodiga.', THEME_TEXT_DOMAIN)]);
-            wp_send_json_success(['message' => __('Teie telefoni nr on saadetud sõnum valideerimis koodiga.', THEME_TEXT_DOMAIN), 'verify' => $verfication_code]);
+            wp_send_json_success(['message' => __('Teie telefoni on saadetud sõnum valideerimis koodiga.', THEME_TEXT_DOMAIN)]);
+            wp_send_json_success(['message' => __('Teie telefoni on saadetud sõnum valideerimis koodiga.', THEME_TEXT_DOMAIN), 'verify' => $verfication_code]);
             // wp_send_json_success($verfication_code); // For automatic filling when testing
         }
         if (\strlen(\trim($mobile)) <= strlen('+372')) {

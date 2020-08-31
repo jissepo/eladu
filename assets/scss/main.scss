@@ -16,6 +16,18 @@
   }
   section {
     padding-top: 30px;
+
+    .section-title {
+      margin: 5rem 0 2rem 0;
+      display: flex;
+      font-size: 5rem;
+      height: 5rem;
+
+      span:first-of-type {
+        width: 5rem;
+        height: 5rem;
+      }
+    }
   }
 
   // @import './general/reset.scss';

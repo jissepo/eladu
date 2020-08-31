@@ -1,13 +1,20 @@
 .price__floater {
-  position: fixed;
-  bottom: 0;
-  right: 0;
-  left: 0;
-  background-color: $main;
+  // position: fixed;
+  // bottom: 0;
+  // right: 0;
+  // left: 0;
+  width: 100%;
+  border: 1px solid $main;
   display: flex;
   justify-content: center;
   padding: 0.5rem;
+  margin-top: 2rem;
   z-index: 2;
+  background-color: #f6f7f7;
+
+  &.top-sticky {
+    margin-top: 0;
+  }
 
   &_box {
     display: flex;
@@ -19,10 +26,87 @@
     margin: 0 auto;
     max-width: 800px;
 
-    p {
+    .price {
+      display: flex;
+      align-items: center;
+      width: 25%;
+      text-align: center;
+    }
+
+    .step {
       font-weight: 500;
+      display: flex;
+      flex-direction: column;
+      line-height: 3rem;
+      width: 25%;
+
+      &:first-of-type {
+        span:first-of-type {
+          &::before {
+            border: none;
+          }
+        }
+      }
+      &:nth-of-type(3) {
+        span:first-of-type {
+          &::after {
+            border: none;
+          }
+        }
+      }
       &.active {
-        color: $white !important;
+        color: $main !important;
+        span:first-of-type {
+          background-color: $main;
+          &::after,
+          &::before {
+            border-color: $main;
+          }
+        }
+      }
+      span {
+        text-align: center;
+      }
+
+      span:first-of-type {
+        width: 3rem;
+        height: 3rem;
+        margin: 0 auto;
+        background-color: #a7a7a7;
+        border-radius: 2rem;
+        text-align: center;
+        line-height: 3rem;
+        font-weight: bold;
+        color: #000;
+        font-size: 1.9rem;
+        position: relative;
+
+        &::before,
+        &::after {
+          content: "";
+          position: absolute;
+          top: calc( 50% - 2.5px );
+          border: 2.5px solid black;
+          left: 0;
+          right: 0;
+          width: 300%;
+        }
+
+        &::before {
+          left: inherit;
+          right: 3rem;
+        }
+        &::after {
+          left: 3rem;
+          right: inherit;
+        }
+
+
+        img {
+          padding: 0.7rem;
+          margin: 0;
+          width: 3rem;
+        }
       }
     }
   }

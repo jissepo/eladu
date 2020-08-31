@@ -588,7 +588,7 @@ new Vue({
             params: {
               checkIn: this.datepicker.checkIn,
               checkOut: this.datepicker.checkOut,
-              location: this.checkout.location.value,
+              location: this.checkout.location ? this.checkout.location.value : 0,
             },
           })
           .then(function (response) {
