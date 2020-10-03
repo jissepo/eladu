@@ -37,6 +37,7 @@ Vue.filter("formatSum", function (value) {
 new Vue({
   el: "#vue--checkout",
   data: {
+    popupImageLink: "",
     canShowContact: false,
     highestStep: 0,
     countries: [],
@@ -58,6 +59,7 @@ new Vue({
       // available: [],
       selected: [],
     },
+    alerts: [],
     datepicker: {
       locale: php_object.translations.datepicker,
       isInfinite: false,
@@ -211,6 +213,13 @@ new Vue({
       }
 
       return errors;
+    },
+    datepickerStartDate() {
+      if (this.extras.selected.length > 0 && this.datepicker.checkIn) {
+        const futureDate = new Date(Date.now() + this.dayInMilliseconds() * 2);
+        return futureDate;
+      }
+      return new Date();
     },
     datepickerEndDate() {
       if (this.datepicker.checkIn) {
@@ -407,6 +416,9 @@ new Vue({
       });
   },
   methods: {
+    dayInMilliseconds: function () {
+      return 86400000;
+    },
     loaderScrollHandler: function (event) {
       const isFixedTop = event.percentTop > 0.6;
       const isFixedBottom = event.percentTop < 0.4;
@@ -446,6 +458,15 @@ new Vue({
         this.extras.selected = this.extras.selected.filter(
           (indexExtra) => indexExtra.id !== extra.id
         );
+      }
+
+      const futureDate = new Date(Date.now() + this.dayInMilliseconds() * 2);
+      this.alerts = [];
+      if (
+        this.datepicker.checkIn < futureDate &&
+        this.extras.selected.length > 0
+      ) {
+        this.alerts.push(php_object.translations.delayed);
       }
     },
 
@@ -588,7 +609,9 @@ new Vue({
             params: {
               checkIn: this.datepicker.checkIn,
               checkOut: this.datepicker.checkOut,
-              location: this.checkout.location ? this.checkout.location.value : 0,
+              location: this.checkout.location
+                ? this.checkout.location.value
+                : 0,
             },
           })
           .then(function (response) {

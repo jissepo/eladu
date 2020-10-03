@@ -11,19 +11,26 @@
   h2 {
     margin-top: 0;
   }
-  &__field {
-    display: block;
+  &__field, &__field--container {
     position: relative;
     white-space: nowrap;
+  }
+  &__field {
+    display: flex;
+    flex-direction: row;
     line-height: 1;
     margin-bottom: 1rem;
-
     @include styled-checkbox;
 
-    button {
-      position: absolute;
+
+    span.image {
+      margin: 0 0.5rem;
+      align-self: center;
+    }
+
+    button.jj-tippy {
       height: 2rem;
-      width: 2rem;
+      min-width: 2rem;
       padding: 0;
       right: 0;
       z-index: 2;

@@ -22,7 +22,16 @@
 					<?php echo esc_attr_e( 'Maksmine', THEME_TEXT_DOMAIN ); ?>
 				</span>
 			</div>
-			<div class="active price"><strong><?php echo __( 'Summa', THEME_TEXT_DOMAIN ); ?>:</strong>&nbsp;<span :inner-html.prop="totalSum | formatSum"></span> &nbsp;<span v-if="totalSum !== 0">(<?php _e( 'sis. KM', THEME_TEXT_DOMAIN ); ?>)</span></div>
+			<div class="active price">
+				<strong><?php echo __( 'Summa', THEME_TEXT_DOMAIN ); ?>:</strong>&nbsp;
+				<span :inner-html.prop="totalSum | formatSum"></span>&nbsp;
+				<!-- <span v-if="totalSum !== 0">(<?php _e( 'sis. KM', THEME_TEXT_DOMAIN ); ?>)</span> -->
+			</div>
+		</div>
+		<div class="price__floater_box--bottom" v-if="alerts.length">
+			<ul>
+				<li class="alert alert-danger" v-for="(alert, index) in alerts" :key="`alert--${index}`">{{alert}}</li>
+			</ul>
 		</div>
 	</div>
 	<form action="<?php echo admin_url( 'admin-post.php' ); ?>" method="post" v-on:submit.prevent="submitPurchase">
@@ -41,7 +50,7 @@
 					<v-select placeholder="<?php esc_html_e( 'Lao asukoht', THEME_TEXT_DOMAIN ); ?>" v-model="checkout.location" :options="location.locations"></v-select>
 				</div>
 				<div class="box__date">
-					<v-date-picker :start-date="new Date()" :end-date="datepickerEndDate" :enable-checkout="true" :hovering-tooltip="true" :i18n="datepicker.locale" v-on:check-in-changed="updateCheckInDate($event)" v-on:check-out-changed="datepicker.checkOut = $event; highestStep = (highestStep === 0 ? 1 : highestStep)" format="DD/MM/YYYY" :min-nights="datepicker.minNights" :first-day-of-week="1" :single-day-selection="datepicker.isInfinite" />
+					<v-date-picker :start-date="datepickerStartDate" :end-date="datepickerEndDate" :enable-checkout="true" :hovering-tooltip="true" :i18n="datepicker.locale" v-on:check-in-changed="updateCheckInDate($event)" v-on:check-out-changed="datepicker.checkOut = $event; highestStep = (highestStep === 0 ? 1 : highestStep)" format="DD/MM/YYYY" :min-nights="datepicker.minNights" :first-day-of-week="1" :single-day-selection="datepicker.isInfinite" />
 					<p class="" v-if="errorMessage">{{ errorMessage }}</p>
 				</div>
 				<div class="box__map">
@@ -50,11 +59,17 @@
 						<button class="green-button" v-on:click.prevent="location.displayIframe = false">X</button>
 						<div class="box__map--popup-iframe" v-html="selectedLocationHref"></div>
 					</div>
+					<div class="box__map--popup-container" style="z-index: -1;" v-if="popupImageLink !== ''">
+						<button class="green-button" v-on:click.prevent="popupImageLink = ''">X</button>
+						<div class="box__map--popup-iframe">
+							<img :src="popupImageLink" class="extra__image">
+						</div>
+					</div>
 				</div>
 
 				<div class="box__type">
 					<div class="box__type--single">
-						<p><?php echo __( 'Bokse on võimalik ette broneerida kuni 14 päeva.', THEME_TEXT_DOMAIN ); ?></p><br>
+						<p><strong><?php echo __( 'Bokse on võimalik ette broneerida kuni 14 päeva.', THEME_TEXT_DOMAIN ); ?></strong></p><br>
 						<p><?php echo __( 'Boksi broneeringu minimaalne kestvus on 31 päeva.', THEME_TEXT_DOMAIN ); ?></p><br>
 					</div>
 					<div class="box__type--single">
@@ -94,9 +109,12 @@
 					</header>
 					<div class="extras__container" v-if="checkout.location && checkout.box">
 						<div class="extras__field" v-for="extra in checkout.location.extras">
-							<input type="checkbox" :name="'extra['+extra.id+']'" v-on:change="changeSelectedExtra($event, extra)" />
-							<label :for="'extra['+extra.id+']'">{{extra.label}} (&nbsp;<span :inner-html.prop="extra.price_html"></span>&nbsp;)</label>
-							<button v-if="extra.tippy" type="button" :content="extra.tippy" v-tippy="{ theme: 'light-border', placement : 'left',  arrow: true }">?</button>
+							<div class="extras__field--container">
+								<input type="checkbox" :name="'extra['+extra.id+']'" v-on:change="changeSelectedExtra($event, extra)" />
+								<label :for="'extra['+extra.id+']'">{{extra.label}}(&nbsp;<span :inner-html.prop="extra.price_html"></span>&nbsp;)</label>
+							</div>
+							<span class="image" v-if="extra.image !== null" v-on:click="popupImageLink = extra.image"><?php _e('Vaata pilti', THEME_TEXT_DOMAIN);?></span>
+							<button class="jj-tippy" v-if="extra.tippy" type="button" :content="extra.tippy" v-tippy="{ theme: 'light-border', placement : 'left',  arrow: true }">?</button>
 						</div>
 					</div>
 					<div class="extras__field" v-if="!checkout.box">
