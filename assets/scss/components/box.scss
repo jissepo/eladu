@@ -36,7 +36,6 @@
     &--single {
       display: block;
       position: relative;
-      white-space: nowrap;
       line-height: 1;
 
       @include styled-checkbox;
@@ -131,7 +130,7 @@
 
         & > button {
           position: absolute;
-          top: 10rem;
+          top: 15rem;
           right: 10rem;
           border-radius: inherit;
           border-bottom-left-radius: $button-border-radius;
@@ -145,10 +144,19 @@
 
       &-iframe {
         padding: 10rem;
+        padding-top: 18rem;
         height: 100%;
 
         @media screen and (max-width: 700px) {
           padding: 2rem;
+        }
+
+        &.date_text {
+          background-color: #fff;
+          padding: 3rem;
+          position: absolute;
+          top: 50%;
+          height: initial;
         }
 
         iframe {
@@ -177,4 +185,22 @@
     color: #ddd;
     text-decoration: line-through;
   }
+}
+
+.square > div {
+  position: relative !important;
+}
+.datepicker__tooltip {
+  background-color: #2d3047;
+  -webkit-border-radius: 2px;
+  border-radius: 2px;
+  color: #fff;
+  font-size: 11px;
+  margin-left: 0px;
+  margin-top:  0px;
+  padding: 5px 10px;
+  position: absolute;
+  z-index: 50;
+  bottom: 45px;
+  transform: translateX(-25%);
 }

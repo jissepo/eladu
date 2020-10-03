@@ -1323,6 +1323,11 @@ elliptic@^6.0.0, elliptic@^6.5.2:
     minimalistic-assert "^1.0.0"
     minimalistic-crypto-utils "^1.0.0"
 
+email-validator@^2.0.4:
+  version "2.0.4"
+  resolved "https://registry.yarnpkg.com/email-validator/-/email-validator-2.0.4.tgz#b8dfaa5d0dae28f1b03c95881d904d4e40bfe7ed"
+  integrity sha512-gYCwo7kh5S3IDyZPLZf6hSS0MnZT8QmJFqYvbqlDZSbwdZlY6QZWxJ4i/6UhITOJ4XzyI647Bm2MXKCLqnJ4nQ==
+
 emoji-regex@^7.0.1:
   version "7.0.3"
   resolved "https://registry.yarnpkg.com/emoji-regex/-/emoji-regex-7.0.3.tgz#933a04052860c85e83c122479c4748a8e4c72156"
@@ -4583,7 +4588,12 @@ vue-select@^3.10.3:
   resolved "https://registry.yarnpkg.com/vue-select/-/vue-select-3.10.7.tgz#58d756a7159bf923ce99abf74c5d6309ea998136"
   integrity sha512-6rvIYBNEp9y0xK/sq2ZzDCxKA2BoVNliyctOeMtzarQzvpLlab7l8zvqr2jhGZOxozp7jd2AvZxpF3Ivems2wQ==
 
-vue-sticky-js@^0.0.4:
+vue-sticky-directive@0.0.10:
+  version "0.0.10"
+  resolved "https://registry.yarnpkg.com/vue-sticky-directive/-/vue-sticky-directive-0.0.10.tgz#07cc87da8732d0c9fc25bc4a6bcbe8329b54efbc"
+  integrity sha512-hufUlr3ik0D9KkzG/6gy0SK4ESJyqvrEjv5+J1TrG6n+25n6GB6ngksw3FAp6H5mPQw44GYmHSf5+V8W/AhVig==
+
+vue-sticky-js@0.0.4:
   version "0.0.4"
   resolved "https://registry.yarnpkg.com/vue-sticky-js/-/vue-sticky-js-0.0.4.tgz#9e888402436f03c34fdca5316818fb9b714a02a0"
   integrity sha1-noiEAkNvA8NP3KUxaBj7m3FKAqA=

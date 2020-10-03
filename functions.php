@@ -90,7 +90,7 @@ class ThemeSetup {
 
 	private function add_reservations_table() {
 		$saved_version  = (int) get_site_option( 'jj_reservations_table_version' );
-		$currentVersion = 5;
+		$currentVersion = 666;
 
 		global $wpdb;
 		$wpdb->box_reservations = "{$wpdb->prefix}box_reservations";
@@ -188,6 +188,8 @@ class ThemeSetup {
 
 	public static function get_datepicker_locale() {
 		return array(
+			'month'       => __( 'kuu', THEME_TEXT_DOMAIN ),
+			'months'       => __( 'kuud', THEME_TEXT_DOMAIN ),
 			'night'       => __( 'päev', THEME_TEXT_DOMAIN ),
 			'nights'      => __( 'päeva', THEME_TEXT_DOMAIN ),
 			'day-names'   => array(

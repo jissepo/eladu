@@ -3,7 +3,7 @@ import Vue from "vue";
 import axios from "axios";
 import VueAxios from "vue-axios";
 import vSelect from "vue-select";
-import HotelDatePicker from "vue-hotel-datepicker";
+import HotelDatePicker from "../vue/vue-hotel-datepicker/dist/vue-hotel-datepicker.min";
 import checkView from "vue-check-view";
 import VueTippy, { TippyComponent } from "vue-tippy";
 import Sticky from "vue-sticky-directive";
@@ -37,6 +37,8 @@ Vue.filter("formatSum", function (value) {
 new Vue({
   el: "#vue--checkout",
   data: {
+    popupDisabledDate: false,
+    allowUpdateBoxes: true,
     popupImageLink: "",
     canShowContact: false,
     highestStep: 0,
@@ -98,6 +100,10 @@ new Vue({
     },
   },
   computed: {
+    datepickerDisplayMessage() {
+      console.log(this.datepicker.checkIn, this.datepicker.checkOut);
+      return this.datepicker.checkIn + this.datepicker.checkOut;
+    },
     currentStep() {
       if (
         this.highestStep === 3 ||
@@ -211,15 +217,10 @@ new Vue({
       if (!this.checkout.fields.country) {
         errors.push("Riik peab olema valitud.");
       }
-
       return errors;
     },
     datepickerStartDate() {
-      if (this.extras.selected.length > 0 && this.datepicker.checkIn) {
-        const futureDate = new Date(Date.now() + this.dayInMilliseconds() * 2);
-        return futureDate;
-      }
-      return new Date();
+      return new Date(Date.now() + this.dayInMilliseconds());
     },
     datepickerEndDate() {
       if (this.datepicker.checkIn) {
@@ -229,6 +230,18 @@ new Vue({
     },
   },
   watch: {
+    "extras.selected": function (newVal, oldVal) {
+      if (this.extras.selected.length > 0 && this.datepicker.checkIn) {
+        const futureDate = new Date(Date.now() + this.dayInMilliseconds() * 3);
+        if (this.datepicker.checkIn < futureDate) {
+          console.log("1");
+          this.allowUpdateBoxes = false;
+          console.log("2");
+          this.$refs.datePicker.setCheckInDate(futureDate)
+          // this.datepicker.checkIn = futureDate;
+        }
+      }
+    },
     "checkout.location": function (newVal, oldVal) {
       this.highestStep = this.highestStep === 0 ? 1 : this.highestStep;
       this.updateAvailableBoxes(false);
@@ -237,7 +250,7 @@ new Vue({
       this.updateAvailableBoxes(true);
     },
     "datepicker.checkOut": function (newVal, oldVal) {
-      this.updateAvailableBoxes(true);
+      this.updateAvailableBoxes(true, true);
     },
     "checkout.box": function (newVal, oldVal) {
       if (!this.canShowContact) {
@@ -450,6 +463,10 @@ new Vue({
       this.datepicker.checkIn = event;
       this.highestStep = this.highestStep === 0 ? 1 : this.highestStep;
     },
+    handleDisabledDayClick: function (event) {
+      this.popupDisabledDate = true;
+      this.$refs.datePicker.hideDatepicker()
+    },
     changeSelectedExtra: function (event, extra) {
       // TODO: Validate that this actually works when products are in.
       if (event.target.checked) {
@@ -595,13 +612,19 @@ new Vue({
           self.loader.isLoading = false;
         });
     },
-    updateAvailableBoxes(force) {
+    updateAvailableBoxes(force, help = false) {
       const self = this;
+      console.log(this.allowUpdateBoxes &&
+        (force ||
+          (this.datepicker.checkIn &&
+            this.checkout.location &&
+            !this.locationHasBoxes())));
       if (
-        (this.datepicker.checkIn &&
-          this.checkout.location &&
-          !this.locationHasBoxes()) ||
-        force
+        this.allowUpdateBoxes &&
+        (force ||
+          (this.datepicker.checkIn &&
+            this.checkout.location &&
+            !this.locationHasBoxes()))
       ) {
         self.loader.isLoading = true;
         this.axios
@@ -627,9 +650,14 @@ new Vue({
             self.loader.isLoading = false;
           });
       } else {
-        // this.location.boxes = [];
-        this.checkout.box = null;
+        if (this.allowUpdateBoxes) {
+          this.checkout.box = null;
+        }
       }
+      if (help) {
+        this.allowUpdateBoxes = true;
+      }
+
     },
   },
 });

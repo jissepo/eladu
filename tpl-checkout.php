@@ -5,19 +5,19 @@
 	<div class="price__floater" v-sticky sticky-offset="{top: 70, bottom: 0}">
 		<div class="price__floater_box">
 			<div class="step" :class="{active:currentStep >= 1}">
-				<span><img src="<?php echo get_stylesheet_directory_uri(); ?>/assets/svg/container.svg" alt=""></span>
+				<span>1</span>
 				<span>
 					<?php echo esc_attr_e( 'Vali ladu', THEME_TEXT_DOMAIN ); ?>
 				</span>
 			</div>
 			<div class="step" :class="{active:currentStep >= 2}">
-				<span><img src="<?php echo get_stylesheet_directory_uri(); ?>/assets/svg/user.svg" alt=""></span>
+				<span>2</span>
 				<span>
 					<?php echo esc_attr_e( 'Kontaktandmed', THEME_TEXT_DOMAIN ); ?>
 				</span>
 			</div>
 			<div class="step" :class="{active:currentStep >= 3}">
-				<span>€</span>
+				<span>3</span>
 				<span>
 					<?php echo esc_attr_e( 'Maksmine', THEME_TEXT_DOMAIN ); ?>
 				</span>
@@ -37,10 +37,7 @@
 	<form action="<?php echo admin_url( 'admin-post.php' ); ?>" method="post" v-on:submit.prevent="submitPurchase">
 		<section class="box">
 			<h1 class="section-title" :class="{active:currentStep >= 1}">
-				<span><img src="<?php echo get_stylesheet_directory_uri(); ?>/assets/svg/container.svg" alt=""></span>
-				<span>
-					<?php echo esc_attr_e( 'Vali ladu', THEME_TEXT_DOMAIN ); ?>
-				</span>
+				<div class="section-number">1</div>
 			</h1>
 			<header class="box__title">
 				<h2><?php esc_html_e( 'Vali asukoht ja periood', THEME_TEXT_DOMAIN ); ?></h2>
@@ -50,7 +47,21 @@
 					<v-select placeholder="<?php esc_html_e( 'Lao asukoht', THEME_TEXT_DOMAIN ); ?>" v-model="checkout.location" :options="location.locations"></v-select>
 				</div>
 				<div class="box__date">
-					<v-date-picker :start-date="datepickerStartDate" :end-date="datepickerEndDate" :enable-checkout="true" :hovering-tooltip="true" :i18n="datepicker.locale" v-on:check-in-changed="updateCheckInDate($event)" v-on:check-out-changed="datepicker.checkOut = $event; highestStep = (highestStep === 0 ? 1 : highestStep)" format="DD/MM/YYYY" :min-nights="datepicker.minNights" :first-day-of-week="1" :single-day-selection="datepicker.isInfinite" />
+					<v-date-picker
+					:start-date="datepickerStartDate"
+					:end-date="datepickerEndDate"
+					:enable-checkout="true"
+					:hovering-tooltip="true"
+					:i18n="datepicker.locale"
+					:min-nights="datepicker.minNights"
+					:first-day-of-week="1"
+					:single-day-selection="datepicker.isInfinite"
+					@disabled-day-clicked='handleDisabledDayClick($event)'
+					v-on:check-in-changed="updateCheckInDate($event)"
+					v-on:check-out-changed="datepicker.checkOut = $event; highestStep = (highestStep === 0 ? 1 : highestStep)"
+					format="DD/MM/YYYY"
+					ref="datePicker"
+					/>
 					<p class="" v-if="errorMessage">{{ errorMessage }}</p>
 				</div>
 				<div class="box__map">
@@ -65,11 +76,17 @@
 							<img :src="popupImageLink" class="extra__image">
 						</div>
 					</div>
+					<div class="box__map--popup-container" style="z-index: -1;" v-if="popupDisabledDate">
+						<button class="green-button" v-on:click.prevent="popupDisabledDate = false">X</button>
+						<div class="box__map--popup-iframe date_text">
+							<?php the_field( 'disabled_date_text' ); ?>
+						</div>
+					</div>
 				</div>
 
 				<div class="box__type">
 					<div class="box__type--single">
-						<p><strong><?php echo __( 'Bokse on võimalik ette broneerida kuni 14 päeva.', THEME_TEXT_DOMAIN ); ?></strong></p><br>
+						<p><strong><?php echo sprintf( __( 'Bokse on võimalik ette broneerida kuni 14 päeva. Kui soovite pikemalt ette broneerida, siis %1$s võtke meiega ühendust. %2$s', THEME_TEXT_DOMAIN ), '<a href="' . site_url() . '#kontakt">', '</a>' ); ?></strong></p><br>
 						<p><?php echo __( 'Boksi broneeringu minimaalne kestvus on 31 päeva.', THEME_TEXT_DOMAIN ); ?></p><br>
 					</div>
 					<div class="box__type--single">
@@ -113,7 +130,7 @@
 								<input type="checkbox" :name="'extra['+extra.id+']'" v-on:change="changeSelectedExtra($event, extra)" />
 								<label :for="'extra['+extra.id+']'">{{extra.label}}(&nbsp;<span :inner-html.prop="extra.price_html"></span>&nbsp;)</label>
 							</div>
-							<span class="image" v-if="extra.image !== null" v-on:click="popupImageLink = extra.image"><?php _e('Vaata pilti', THEME_TEXT_DOMAIN);?></span>
+							<span class="image" v-if="extra.image !== null" v-on:click="popupImageLink = extra.image"><?php _e( 'Vaata pilti', THEME_TEXT_DOMAIN ); ?></span>
 							<button class="jj-tippy" v-if="extra.tippy" type="button" :content="extra.tippy" v-tippy="{ theme: 'light-border', placement : 'left',  arrow: true }">?</button>
 						</div>
 					</div>
@@ -128,10 +145,7 @@
 		</section>
 		<section class="checkout" v-if="currentStep >= 2">
 			<h1 class="section-title">
-				<span><img src="<?php echo get_stylesheet_directory_uri(); ?>/assets/svg/user.svg" alt=""></span>
-				<span>
-					<?php echo esc_attr_e( 'Kontaktandmed', THEME_TEXT_DOMAIN ); ?>
-				</span>
+				<div class="section-number">2</div>
 			</h1>
 			<header class="checkout__title">
 				<h2><?php esc_html_e( 'Sisesta kontaktandmed', THEME_TEXT_DOMAIN ); ?></h2>
@@ -223,10 +237,7 @@
 
 		<section class="confirmation" v-if="currentStep >= 3">
 			<h1 class="section-title">
-				<span>€</span>
-				<span>
-					<?php echo esc_attr_e( 'Maksmine', THEME_TEXT_DOMAIN ); ?>
-				</span>
+				<div class="section-number">3</div>
 			</h1>
 			<header class="confirmation__title">
 				<h2><?php esc_html_e( 'Tellimuse kinnitus', THEME_TEXT_DOMAIN ); ?></h2>

@@ -20,6 +20,25 @@
             "prepend": "",
             "append": "",
             "maxlength": ""
+        },
+        {
+            "key": "field_5f7857a0ed032",
+            "label": "Kuupäeva teavitus",
+            "name": "disabled_date_text",
+            "type": "wysiwyg",
+            "instructions": "Tekst mida kuvatakse, kui kasutaja vajutab keelatud kuupäeva peale",
+            "required": 0,
+            "conditional_logic": 0,
+            "wrapper": {
+                "width": "",
+                "class": "",
+                "id": ""
+            },
+            "default_value": "Bokse on võimalik ette broneerida kuni 14 päeva ..",
+            "tabs": "all",
+            "toolbar": "full",
+            "media_upload": 1,
+            "delay": 0
         }
     ],
     "location": [
@@ -39,5 +58,5 @@
     "hide_on_screen": "",
     "active": 1,
     "description": "",
-    "modified": 1600067681
+    "modified": 1601722309
 }
