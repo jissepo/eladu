@@ -319,6 +319,9 @@
       setCheckInDate(date) {
         this.checkIn = date;
       },
+      setCheckOutDate(date) {
+        this.checkOut = date;
+      },
       formatDate(date) {
         if (date) {
           return fecha.format(date, this.format);
@@ -390,8 +393,13 @@
         this.isOpen = true;
       },
 
-      toggleDatepicker() {
+      toggleDatepicker(isStartDateSelect) {
         this.isOpen = !this.isOpen;
+        console.log(isStartDateSelect);
+        if (!isStartDateSelect) {
+          this.checkOut = null;
+          this.hoveringDate = null;
+        }
       },
 
       clickOutside() {

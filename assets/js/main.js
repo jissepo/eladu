@@ -43,6 +43,8 @@ new Vue({
     canShowContact: false,
     highestStep: 0,
     countries: [],
+    isManualCheckInUpdate: false,
+    oldCheckInDate: null,
     loader: {
       isLoading: true,
       isFixedTop: false,
@@ -101,7 +103,7 @@ new Vue({
   },
   computed: {
     datepickerDisplayMessage() {
-      console.log(this.datepicker.checkIn, this.datepicker.checkOut);
+      // console.log(this.datepicker.checkIn, this.datepicker.checkOut);
       return this.datepicker.checkIn + this.datepicker.checkOut;
     },
     currentStep() {
@@ -231,22 +233,42 @@ new Vue({
   },
   watch: {
     "extras.selected": function (newVal, oldVal) {
+      this.alerts = [];
       if (this.extras.selected.length > 0 && this.datepicker.checkIn) {
-        const futureDate = new Date(Date.now() + this.dayInMilliseconds() * 3);
-        if (this.datepicker.checkIn < futureDate) {
-          console.log("1");
+        const futureDate = this.extraFutureDate(this.oldCheckInDate ? this.oldCheckInDate : this.datepicker.checkIn);
+
+        if (this.datepicker.checkIn < futureDate && this.extras.selected.length > 0) {
           this.allowUpdateBoxes = false;
-          console.log("2");
-          this.$refs.datePicker.setCheckInDate(futureDate)
-          // this.datepicker.checkIn = futureDate;
+          this.isManualCheckInUpdate = true;
+          this.oldCheckInDate = new Date(this.datepicker.checkIn);
+          this.$refs.datePicker.setCheckInDate(futureDate);
         }
+
+        if (this.datepicker.checkIn <= futureDate && this.extras.selected.length > 0) {
+          const startDate = `${`0${futureDate.getDate()}`.slice(-2)}.${`0${futureDate.getMonth()+1}`.slice(-2)}.${futureDate.getFullYear()}`
+          this.alerts.push(php_object.translations.delayed.replace('{{newStartDate}}', startDate));
+        }
+
+      } else if (this.extras.selected.length === 0 && this.oldCheckInDate) {
+        this.isManualCheckInUpdate = true;
+        this.allowUpdateBoxes = false;
+        this.$refs.datePicker.setCheckInDate(this.oldCheckInDate)
+        this.oldCheckInDate = null;
       }
     },
     "checkout.location": function (newVal, oldVal) {
       this.highestStep = this.highestStep === 0 ? 1 : this.highestStep;
-      this.updateAvailableBoxes(false);
+      if (!newVal) {
+        this.alerts = [];
+        this.extras.selected = [];
+        this.checkout.box  = null;
+      }
+      this.updateAvailableBoxes(this.datepicker.checkIn !== null);
     },
     "datepicker.checkIn": function (newVal, oldVal) {
+      if (!newVal) {
+        this.alerts = [];
+      }
       this.updateAvailableBoxes(true);
     },
     "datepicker.checkOut": function (newVal, oldVal) {
@@ -257,6 +279,7 @@ new Vue({
         this.canShowContact = true;
       }
       if (this.checkout.box === null) {
+        this.alerts = [];
         this.extras.selected = [];
       }
     },
@@ -456,11 +479,20 @@ new Vue({
         this.datepicker.checkOut = null;
       } else {
         this.datepicker.minNights = 31;
+        if (this.datepicker.checkIn) {
+          const date = new Date(this.datepicker.checkIn);
+          date.setMonth(date.getMonth() + 1)
+          this.$refs.datePicker.setCheckOutDate(date)
+        }
       }
     },
     updateCheckInDate: function (event) {
-      this.datepicker.checkOut = null;
       this.datepicker.checkIn = event;
+      if (!this.isManualCheckInUpdate) {
+        this.datepicker.checkOut = null;
+        this.checkout.box  = null;
+      }
+      this.isManualCheckInUpdate = false;
       this.highestStep = this.highestStep === 0 ? 1 : this.highestStep;
     },
     handleDisabledDayClick: function (event) {
@@ -476,17 +508,30 @@ new Vue({
           (indexExtra) => indexExtra.id !== extra.id
         );
       }
-
-      const futureDate = new Date(Date.now() + this.dayInMilliseconds() * 2);
-      this.alerts = [];
-      if (
-        this.datepicker.checkIn < futureDate &&
-        this.extras.selected.length > 0
-      ) {
-        this.alerts.push(php_object.translations.delayed);
-      }
     },
 
+    extraFutureDate: function(startDate = null) {
+      const today = startDate === null ? new Date() : new Date(startDate);
+      today.setHours(0);
+      today.setMinutes(0);
+      today.setSeconds(0);
+      today.setMilliseconds(0)
+      if (today.getDay() === 0) {
+        today.setDate(today.getDate() + 2);
+        return today;
+      } else if (today.getDay() === 6) {
+        today.setDate(today.getDate() + 3);
+        return today;
+      } else if (today.getDay() === 5) {
+        today.setDate(today.getDate() + 4);
+        return today;
+      } else if (today.getDay() === 4) {
+        today.setDate(today.getDate() + 4);
+        return today;
+      }
+      today.setDate(today.getDate() + 2);
+      return today;
+    },
     sendValidationCode: function () {
       const self = this;
       self.loader.isLoading = true;
@@ -525,7 +570,8 @@ new Vue({
     },
 
     locationHasBoxes() {
-      if (this.getSelectedLocationIndex() === -1) {
+      // console.log(this.getSelectedLocationIndex() === -1, this.datepicker.checkIn === null);
+      if (this.getSelectedLocationIndex() === -1 || this.datepicker.checkIn === null) {
         return false;
       }
       return (
@@ -570,7 +616,7 @@ new Vue({
         location: this.checkout.location.value,
         box: this.checkout.box.value,
         order_comments: "",
-        billing_country: this.checkout.country.code,
+        billing_country: this.checkout.country,
         billing_address_1: this.checkout.fields.address,
         billing_postcode: this.checkout.fields.postcode,
         billing_city: this.checkout.fields.jurisdiction,
@@ -614,11 +660,11 @@ new Vue({
     },
     updateAvailableBoxes(force, help = false) {
       const self = this;
-      console.log(this.allowUpdateBoxes &&
-        (force ||
-          (this.datepicker.checkIn &&
-            this.checkout.location &&
-            !this.locationHasBoxes())));
+      // console.log(this.allowUpdateBoxes &&
+      //   (force ||
+      //     (this.datepicker.checkIn &&
+      //       this.checkout.location &&
+      //       !this.locationHasBoxes())));
       if (
         this.allowUpdateBoxes &&
         (force ||
@@ -660,4 +706,7 @@ new Vue({
 
     },
   },
+  directives: {
+    Sticky,
+  }
 });

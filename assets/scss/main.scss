@@ -1,6 +1,11 @@
 @import "./general/variables.scss";
 @import "./general/mixins.scss";
-
+#broneerimine {
+  @media screen and (max-width: 500px) {
+    padding-left: 4rem !important;
+    padding-right: 4rem !important;
+  }
+}
 #vue--checkout {
   max-width: 800px;
   margin: 0 auto;

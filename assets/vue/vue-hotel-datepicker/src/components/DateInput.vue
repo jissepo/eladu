@@ -1,7 +1,7 @@
 <template lang="pug">
   .datepicker__input(
-    @click="toggleDatepicker"
-    @keyup.enter.stop.prevent="toggleDatepicker"
+    @click="toggle"
+    @keyup.enter.stop.prevent="toggle"
     data-qa='datepickerInput'
     :class="inputClass"
     v-text="inputDate ? inputDate : i18n[inputDateType]"
@@ -54,5 +54,11 @@ export default {
       return this.inputDateType === 'check-in' ? 0 : -1;
     }
   },
+
+  methods: {
+    toggle() {
+      this.toggleDatepicker(this.inputDateType === 'check-in')
+    }
+  }
 };
 </script>

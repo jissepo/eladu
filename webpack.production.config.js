@@ -7,7 +7,9 @@ module.exports = {
     filename: "build.js",
     path: path.resolve(__dirname, "assets/js"),
   },
-  resolve: { alias: { vue: "vue/dist/vue.esm.js" } },
+  resolve: {
+    alias: { vue: "vue/dist/vue.esm.js" },
+  },
   module: {
     rules: [
       {
