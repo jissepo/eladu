@@ -235,18 +235,21 @@ new Vue({
     "extras.selected": function (newVal, oldVal) {
       this.alerts = [];
       if (this.extras.selected.length > 0 && this.datepicker.checkIn) {
-        const futureDate = this.extraFutureDate(this.oldCheckInDate ? this.oldCheckInDate : this.datepicker.checkIn);
+        const todayPlusTwoDays = this.extraFutureDate();
+        if (todayPlusTwoDays > this.datepicker.checkIn) {
+          const futureDate = this.extraFutureDate(this.oldCheckInDate ? this.oldCheckInDate : this.datepicker.checkIn);
+          // this.oldCheckInDate ? this.oldCheckInDate : this.datepicker.checkIn
+          if (this.datepicker.checkIn < futureDate && this.extras.selected.length > 0) {
+            this.allowUpdateBoxes = false;
+            this.isManualCheckInUpdate = true;
+            this.oldCheckInDate = new Date(this.datepicker.checkIn);
+            this.$refs.datePicker.setCheckInDate(futureDate);
+          }
 
-        if (this.datepicker.checkIn < futureDate && this.extras.selected.length > 0) {
-          this.allowUpdateBoxes = false;
-          this.isManualCheckInUpdate = true;
-          this.oldCheckInDate = new Date(this.datepicker.checkIn);
-          this.$refs.datePicker.setCheckInDate(futureDate);
-        }
-
-        if (this.datepicker.checkIn <= futureDate && this.extras.selected.length > 0) {
-          const startDate = `${`0${futureDate.getDate()}`.slice(-2)}.${`0${futureDate.getMonth()+1}`.slice(-2)}.${futureDate.getFullYear()}`
-          this.alerts.push(php_object.translations.delayed.replace('{{newStartDate}}', startDate));
+          if (this.datepicker.checkIn <= futureDate && this.extras.selected.length > 0) {
+            const startDate = `${`0${futureDate.getDate()}`.slice(-2)}.${`0${futureDate.getMonth()+1}`.slice(-2)}.${futureDate.getFullYear()}`
+            this.alerts.push(php_object.translations.delayed.replace('{{newStartDate}}', startDate));
+          }
         }
 
       } else if (this.extras.selected.length === 0 && this.oldCheckInDate) {
