@@ -84,6 +84,8 @@ new Vue({
       location: null,
       box: null,
       privacyPolicy: false,
+      uurileping: false,
+      kasutustingimused: false,
       fields: {
         mobile: "+372",
         firstName: null,
@@ -154,8 +156,14 @@ new Vue({
     checkoutErrors() {
       const errors = [];
 
+      if (!this.checkout.kasutustingimused) {
+        errors.push("Peate nõustuma kasutustingimustega.");
+      }
+      if (!this.checkout.uurileping) {
+        errors.push("Peate nõustuma üürilepingu tingimustega.");
+      }
       if (!this.checkout.privacyPolicy) {
-        errors.push("Peate nõustuma tingimustega.");
+        errors.push("Peate nõustuma andmekaitsetingimustega.");
       }
       if (!this.datepicker.checkIn) {
         errors.push("Algusekuupäev peab olema valitud.");
@@ -236,23 +244,20 @@ new Vue({
       this.alerts = [];
       if (this.extras.selected.length > 0 && this.datepicker.checkIn) {
         const todayPlusTwoDays = this.extraFutureDate();
-        if (todayPlusTwoDays > this.datepicker.checkIn) {
-          const futureDate = this.extraFutureDate(this.oldCheckInDate ? this.oldCheckInDate : this.datepicker.checkIn);
-          // this.oldCheckInDate ? this.oldCheckInDate : this.datepicker.checkIn
-          if (this.datepicker.checkIn < futureDate && this.extras.selected.length > 0) {
-            this.allowUpdateBoxes = false;
-            this.isManualCheckInUpdate = true;
-            this.oldCheckInDate = new Date(this.datepicker.checkIn);
-            this.$refs.datePicker.setCheckInDate(futureDate);
-          }
+        const futureDate = this.extraFutureDate();
 
-          if (this.datepicker.checkIn <= futureDate && this.extras.selected.length > 0) {
-            const startDate = `${`0${futureDate.getDate()}`.slice(-2)}.${`0${futureDate.getMonth()+1}`.slice(-2)}.${futureDate.getFullYear()}`
-            this.alerts.push(php_object.translations.delayed.replace('{{newStartDate}}', startDate));
-          }
+        this.oldCheckInDate = this.oldCheckInDate ? this.oldCheckInDate : new Date(this.datepicker.checkIn);
+
+        if (this.oldCheckInDate <= todayPlusTwoDays) {
+          this.allowUpdateBoxes = false;
+          this.isManualCheckInUpdate = true;
+          this.$refs.datePicker.setCheckInDate(futureDate);
+
+          const startDate = `${`0${futureDate.getDate()}`.slice(-2)}.${`0${futureDate.getMonth() + 1}`.slice(-2)}.${futureDate.getFullYear()}`
+          this.alerts.push(php_object.translations.delayed.replace('{{newStartDate}}', startDate));
         }
 
-      } else if (this.extras.selected.length === 0 && this.oldCheckInDate) {
+      } else if (this.extras.selected.length === 0 && this.oldCheckInDate && this.datepicker.checkIn) {
         this.isManualCheckInUpdate = true;
         this.allowUpdateBoxes = false;
         this.$refs.datePicker.setCheckInDate(this.oldCheckInDate)
@@ -264,7 +269,7 @@ new Vue({
       if (!newVal) {
         this.alerts = [];
         this.extras.selected = [];
-        this.checkout.box  = null;
+        this.checkout.box = null;
       }
       this.updateAvailableBoxes(this.datepicker.checkIn !== null);
     },
@@ -493,7 +498,7 @@ new Vue({
       this.datepicker.checkIn = event;
       if (!this.isManualCheckInUpdate) {
         this.datepicker.checkOut = null;
-        this.checkout.box  = null;
+        this.checkout.box = null;
       }
       this.isManualCheckInUpdate = false;
       this.highestStep = this.highestStep === 0 ? 1 : this.highestStep;
@@ -513,7 +518,7 @@ new Vue({
       }
     },
 
-    extraFutureDate: function(startDate = null) {
+    extraFutureDate: function (startDate = null) {
       const today = startDate === null ? new Date() : new Date(startDate);
       today.setHours(0);
       today.setMinutes(0);

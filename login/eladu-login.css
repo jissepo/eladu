@@ -1,0 +1,139 @@
+.login {
+    font-family: 'Roboto', sans-serif;
+    font-weight: 100;
+    font-size: 15px;
+}
+.login form .input, .login input[type="text"] {
+    font-family: 'Roboto', sans-serif;
+    font-size: 20px;
+    border: 1px solid black;
+    padding: 10px;
+}
+
+/* BACKGROUND IMAGE */
+body.login {
+    overflow: hidden;
+}
+/* LOGO */
+.login h1 a {
+    background-image: url('logo.png');
+    background-size: 84px;
+    width: 160px;
+    margin: 0;
+}
+#login {
+    padding: 10% 0 0;
+    position: relative;
+}
+#login h1 {
+    background-color: #000080;
+    border-radius: 20px 20px 0px 0px;
+    height: 160px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.login form {
+    margin-top: -25px;
+    padding: 26px 24px 66px;
+    border-radius: 0px 0px 20px 20px;
+    box-shadow: none;
+    font-weight: 200;
+}
+.login label,
+.login form .forgetmenot label,
+.login #nav a,
+.login #backtoblog a {
+    font-size: 15px;
+    color: black;
+}
+.login .message {
+    margin-top: -25px;
+    border-left: 10px solid #000080;
+}
+/* CHECKBOX */
+input[type="checkbox"] {
+    height: 15px;
+    width: 15px;
+}
+
+/* BUTTON */
+.wp-core-ui .button.button-large {
+    border-radius: 0;
+    background-color: #000080;
+    border-color: #000080;
+    box-shadow: none;
+    text-shadow: none;
+    text-transform: uppercase;
+    height: 32px;
+    font-size: 13px;
+    font-weight: 400;
+}
+#wp-submit {
+    position: relative;
+    top: 40px;
+    right: 65%;
+    padding: 0;
+    padding-left: 12px;
+    padding-right: 12px;
+}
+.login .button-primary:hover {
+    background-color:#000080;
+    color: #fff;
+    border: 1px solid #000080;
+    text-decoration: underline;
+}
+
+.login .button-primary:active {
+    background-color:#000080 !important;
+    color: #fff;
+    border: 1px solid #000080;
+}
+/* FORGET ME NOT */
+.login label, .login form .forgetmenot label {
+    font-weight: 200;
+}
+
+/* LOST PASSWORD */
+.login #nav a {
+    color: #000080;
+}
+.login #nav a:hover {
+    color: #000080;
+}
+.login-action-lostpassword p.message {
+    margin-top: -25px;
+    border-left: 10px solid #000080;
+}
+.login-action-lostpassword #wp-submit {
+    right: 46%;
+}
+/* BACK TO HOME */
+.login #backtoblog a {
+    color: #000080;
+}
+.login #backtoblog a:hover {
+    color: #000080;
+}
+
+/* LOGIN ERROR */
+.login #login_error {
+    border-left: 10px solid #000080;
+    margin-top: -25px;
+}
+img.bg-img {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: block;
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+    transform: scale(1.1);
+}
+.interim-login.login .message,
+.interim-login.login form {
+    margin-top: -25px;
+}

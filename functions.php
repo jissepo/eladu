@@ -160,7 +160,7 @@ class ThemeSetup
 	 */
 	public function jj_theme_enqueue_scripts_and_styles()
 	{
-		$asset_version = '1.2.2';
+		$asset_version = '1.3.1';
 
 		$parent_style = 'parent-style'; // This is 'twentyfifteen-style' for the Twenty Fifteen theme.
 
@@ -179,6 +179,7 @@ class ThemeSetup
 		);
 
 		wp_enqueue_script('jj-custom-js', get_stylesheet_directory_uri() . '/assets/js/build.js', array(), $asset_version, true); // 'vue', 'vue-datepicker'
+		wp_enqueue_script('custom-js', get_stylesheet_directory_uri() . '/assets/js/custom.js', array('jquery'), $asset_version, true); // 'vue', 'vue-datepicker'
 		wp_localize_script(
 			'jj-custom-js',
 			'php_object',
@@ -582,3 +583,25 @@ class ThemeSetup
 }
 
 new ThemeSetup();
+
+
+// Add options page
+if( function_exists('acf_add_options_page') ) {
+    acf_add_options_page('Laopark settings');
+}
+
+// Custom login
+function my_login_logo_url() {
+    return site_url();
+}
+add_filter( 'login_headerurl', 'my_login_logo_url' );
+
+function my_login_logo_url_title() {
+    return site_url();
+}
+add_filter( 'login_headertitle', 'my_login_logo_url_title' );
+
+function custom_login() {
+    echo '<link rel="stylesheet" type="text/css" href="' . get_bloginfo('stylesheet_directory') . '/login/eladu-login.css" />';
+    }
+add_action('login_head', 'custom_login');

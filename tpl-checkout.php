@@ -82,30 +82,45 @@
 						<label for="box__type"><?php esc_html_e('Tähtajatu', THEME_TEXT_DOMAIN); ?></label>
 					</div>
 				</div>
-				<div class="box__layout" v-if="checkout.location && checkout.location.image">
-					<img :src="checkout.location.image" alt="">
+				<div class="box__layout">
+					<iframe style="width:100%;height:600px;" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vS1x_uwFbjlccao-0hbZGnDs955JB_Gp25T6n6MzKvG7Pm3zEeg-znzse4Nwl99J9-JlfP83fbhDBAQ/pubhtml?gid=244141283&amp;single=true&amp;widget=true&amp;headers=false"></iframe>
 				</div>
 				<div class="box__selected" v-if="locationHasBoxes()">
-					<h2><?php esc_html_e('Vali ladu', THEME_TEXT_DOMAIN); ?></h2>
+					<h2><?php esc_html_e('Vali laoboks', THEME_TEXT_DOMAIN); ?></h2>
 					<p>
 						<?php esc_html_e('Saadaolevaid ladusid', THEME_TEXT_DOMAIN); ?>: <strong>{{this.location.locations[this.getSelectedLocationIndex()].boxes.filter(b=>b.can_book).length}}</strong>
 					</p>
 					<v-select placeholder="<?php esc_html_e('Vali ladu', THEME_TEXT_DOMAIN); ?>" v-model="checkout.box" :options="this.location.locations[this.getSelectedLocationIndex()].boxes" label="name_price" :selectable="option => option.can_book">
 						<template v-slot:option="option">
 							<div v-if="option.can_book">
-								{{ option.name }} ( <span v-html="option.price_html"></span> )
+								{{ option.name }}
 							</div>
 							<div class="striketrough" v-if="!option.can_book">
-								{{ option.name }} ( <span v-html="option.price_html"></span> ) <?php esc_html_e('Broneeritud', THEME_TEXT_DOMAIN); ?>
+								{{ option.name }}  <?php esc_html_e('Broneeritud', THEME_TEXT_DOMAIN); ?>
 							</div>
 						</template>
 					</v-select>
 				</div>
 				<div class="box__selected" v-if="!locationHasBoxes()">
-					<h2><?php esc_html_e('Vali ladu', THEME_TEXT_DOMAIN); ?></h2>
+					<h2><?php esc_html_e('Vali laoboks', THEME_TEXT_DOMAIN); ?></h2>
 					<p>
 						<?php esc_html_e('Lao valimiseks palun vali esmalt asukoht ja soovitud kuupäev(ad)', THEME_TEXT_DOMAIN); ?>
 					</p>
+				</div>
+
+				<div class="box__pictures">
+				<?php if( have_rows('ladude_pildid', 'options') ): ?>
+					<div class="box__pictures--row">
+						<?php while( have_rows('ladude_pildid', 'options') ): the_row();
+							$image = get_sub_field('lao_pilt', 'options');
+							?>
+							<div>
+								<a href="<?php echo $image; ?>" rel="prettyPhoto"><img src="<?php echo $image; ?>" width="200" height="200" /></a>
+								<p><b><?php the_sub_field('pildi_tekst', 'options'); ?></b></p>
+							</div>
+						<?php endwhile; ?>
+					</div>
+				<?php endif; ?>
 				</div>
 
 				<div class="extras">
@@ -236,6 +251,9 @@
 						<strong><?php echo __('Lao asukoht', THEME_TEXT_DOMAIN); ?>:</strong> {{selectedLocationLabel}}
 					</p>
 					<p>
+						<strong><?php echo __('Boksi nimetus', THEME_TEXT_DOMAIN); ?>:</strong> {{checkout.box.name}}
+					</p>
+					<p>
 						<strong><?php echo __('Periood', THEME_TEXT_DOMAIN); ?>:</strong> {{datepicker.checkIn | formatDate}} - {{datepicker.checkOut | formatDate}}
 					</p>
 				</div>
@@ -254,9 +272,30 @@
 					<label>
 						<?php
 						echo sprintf(
-							__('Nõustun %1$s ja %2$s.', THEME_TEXT_DOMAIN),
-							'<a href="' . get_privacy_policy_url() . '">' . __('kasutajatingimuste', THEME_TEXT_DOMAIN) . '</a>',
-							'<a href="' . get_privacy_policy_url() . '">' . __('privaatsuspoliitikaga', THEME_TEXT_DOMAIN) . '</a>'
+							__('Nõustun %1$s', THEME_TEXT_DOMAIN),
+							'<a href="' . site_url() . '/andmekaitseleping" target="_blank">' . __('andmekaitsetingimustega', THEME_TEXT_DOMAIN) . '</a>',
+						);
+						?>
+					</label>
+				</div>
+				<div class="confirmation__checkbox">
+					<input type="checkbox" name="checkout[uurileping]" v-model="checkout.uurileping" />
+					<label>
+						<?php
+						echo sprintf(
+							__('Nõustun %1$s.', THEME_TEXT_DOMAIN),
+							'<a href="' . site_url() . '/uurileping" target="_blank">' . __('üürilepingu tingimustega', THEME_TEXT_DOMAIN) . '</a>',
+						);
+						?>
+					</label>
+				</div>
+				<div class="confirmation__checkbox">
+					<input type="checkbox" name="checkout[kasutustingimused]" v-model="checkout.kasutustingimused" />
+					<label>
+						<?php
+						echo sprintf(
+							__('Nõustun %1$s.', THEME_TEXT_DOMAIN),
+							'<a href="' . site_url() . '/kasutustingimused" target="_blank">' . __('kasutustingimustega', THEME_TEXT_DOMAIN) . '</a>',
 						);
 						?>
 					</label>

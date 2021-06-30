@@ -9,3 +9,8 @@
  Tags:         light, dark, responsive-layout
  Text Domain:  eladu
 */
+
+/* Mobile sticky */
+.mobile-sticky div {
+    width: 50%;
+}
