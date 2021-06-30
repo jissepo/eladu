@@ -206,3 +206,55 @@
   bottom: 45px;
   transform: translateX(-25%);
 }
+
+
+@media (max-width: 479px) {
+  .box__date {
+    .datepicker__wrapper {
+      height: 100% !important;
+    }
+    .datepicker__dummy-wrapper {
+      height: 100% !important;
+    }
+  }
+  .datepicker__close-button {
+    top: 54px;
+  }
+  .datepicker--open {
+    height: calc(100% - 50px);
+  }
+  .datepicker__dummy-wrapper--no-border.datepicker__dummy-wrapper {
+    margin-top: 0;
+  }
+  .datepicker__week-row {
+    top: 40px;
+  }
+  .datepicker__months {
+    margin-top: 70px;
+    height: calc(100% - 70px);
+    padding-bottom: 50px;
+  }
+  .datepicker__month {
+    padding-top: 30px;
+
+    &-name {
+      margin-top: -25px;
+      margin-bottom: 0;
+    }
+  }
+  div:not(.-hide-on-desktop) {
+    > .datepicker__dummy-wrapper {
+      flex-direction: column;
+    }
+  }
+  .datepicker__input {
+    padding-left: 0;
+    padding-right: 0;
+    width: 100% !important;
+
+    &:first-child {
+      text-indent: 0px;
+      background: none;
+    }
+  }
+}

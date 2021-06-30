@@ -251,7 +251,7 @@
 						<strong><?php echo __('Lao asukoht', THEME_TEXT_DOMAIN); ?>:</strong> {{selectedLocationLabel}}
 					</p>
 					<p>
-						<strong><?php echo __('Boksi nimetus', THEME_TEXT_DOMAIN); ?>:</strong> {{checkout.box.name}}
+						<strong><?php echo __('Boksi nimetus', THEME_TEXT_DOMAIN); ?>:</strong> {{selectedBoxName}}
 					</p>
 					<p>
 						<strong><?php echo __('Periood', THEME_TEXT_DOMAIN); ?>:</strong> {{datepicker.checkIn | formatDate}} - {{datepicker.checkOut | formatDate}}

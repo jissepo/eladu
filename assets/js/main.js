@@ -25,6 +25,7 @@ Vue.filter("formatDate", function (value) {
   if (value) {
     return moment(String(value)).format("DD.MM.YYYY");
   }
+  return '';
 });
 Vue.filter("formatSum", function (value) {
   if (value !== null) {
@@ -87,19 +88,19 @@ new Vue({
       uurileping: false,
       kasutustingimused: false,
       fields: {
-        mobile: "+372",
-        firstName: null,
-        lastName: null,
-        identifierCode: null,
+        mobile: "+3725157111",
+        firstName: 'joosep',
+        lastName: 'joosep',
+        identifierCode: 31245100524,
         representativeFirstName: null,
         representativeLastName: null,
         companyName: null,
         registryCode: null,
-        email: null,
-        address: null,
-        postcode: null,
-        jurisdiction: null,
-        country: null,
+        email: 'joosep@SpeechGrammarList.com',
+        address: 'Paldiski',
+        postcode: 13245,
+        jurisdiction: 'Tallinn' ,
+        country: 'et',
       },
     },
   },
@@ -152,6 +153,12 @@ new Vue({
       }
 
       return "Esmalt vali asukoht";
+    },
+    selectedBoxName() {
+      if (this.checkout.box && this.checkout.box.name) {
+        return this.checkout.box.name;
+      }
+      return '';
     },
     checkoutErrors() {
       const errors = [];
@@ -276,6 +283,7 @@ new Vue({
     "datepicker.checkIn": function (newVal, oldVal) {
       if (!newVal) {
         this.alerts = [];
+        return;
       }
       this.updateAvailableBoxes(true);
     },
