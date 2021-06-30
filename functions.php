@@ -160,7 +160,7 @@ class ThemeSetup
 	 */
 	public function jj_theme_enqueue_scripts_and_styles()
 	{
-		$asset_version = '1.3.1';
+		$asset_version = '1.4.0';
 
 		$parent_style = 'parent-style'; // This is 'twentyfifteen-style' for the Twenty Fifteen theme.
 
